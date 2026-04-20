@@ -72,13 +72,17 @@ function pctChange(current, previous) {
 // 格式: v_sh000001="1~name~code~price~yesterday_close~open~vol~..."
 function parseTencentData(raw) {
   try {
-    // 去掉 var xxx="..." 包层
-    const match = raw.match(/="([^"]+)"/);
+    // 提取原始代码前缀+代码（如 sh000001）
+    const codeMatch = raw.match(/^v_(sh\d+|sz\d+)/);
+    const codeFull = codeMatch ? codeMatch[1] : ''; // e.g. "sh000001"
+    // 去掉 var xxx="...\" 包层
+    const match = raw.match(/=\"([^\"]+)\"/);
     if (!match) return null;
     const fields = match[1].split('~');
     return {
       name:     fields[1]  || '',
-      code:     fields[2]  || '',
+      code:     fields[2]  || '',  // 纯数字代码
+      codeFull: codeFull,          // 带sh/sz前缀
       price:    parseFloat(fields[3])  || 0,
       yclose:   parseFloat(fields[4])  || 0,
       open:     parseFloat(fields[5])  || 0,
@@ -87,8 +91,8 @@ function parseTencentData(raw) {
       s1:       parseFloat(fields[19]) || 0,   // 卖一价
       date:     fields[30] || '',
       time:     fields[31] || '',
-      change:   parseFloat(fields[32]) || 0,   // 涨跌额
-      changePct:parseFloat(fields[33]) || 0,  // 涨跌幅%
+      change:   parseFloat(fields[32]) || 0,   // 涨跌幅%
+      changePct:parseFloat(fields[32]) || 0,  // 涨跌幅%
     };
   } catch (e) {
     return null;
@@ -102,7 +106,10 @@ function parseTencentData(raw) {
 async function fetchTencent(codes) {
   const url = CONFIG.TENCENT_BASE + codes.join(',');
   const r = await fetch(url);
-  const text = await r.text();
+  // 腾讯财经返回GBK编码，必须手动指定解码，否则中文乱码
+  const buffer = await r.arrayBuffer();
+  const decoder = new TextDecoder('gbk');
+  const text = decoder.decode(buffer);
   const lines = text.trim().split('\n');
   const results = [];
   lines.forEach((line, i) => {
@@ -117,7 +124,7 @@ async function fetchIndexData() {
   const codes = CONFIG.INDICES.map(i => i.code);
   const allData = await fetchTencent(codes);
   return CONFIG.INDICES.map(idx => {
-    const d = allData.find(x => x.code === idx.code);
+    const d = allData.find(x => x.codeFull === idx.code);
     if (!d) return { key: idx.key, name: idx.name, score: 0, price: 0, change: 0 };
     const changePct = d.changePct;
     // 评分逻辑：涨幅×4 + 趋势分×3
