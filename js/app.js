@@ -8,7 +8,7 @@ const CONFIG = {
   // Yahoo Finance API endpoint
   YF_BASE: 'https://query1.finance.yahoo.com/v8/finance/chart/',
   // CORS 代理（解决浏览器跨域问题）
-  CORS_PROXY: 'https://corsproxy.io/?',
+  CORS_PROXY: 'https://api.allorigins.win/raw?url=',
   // 主要指数（Yahoo代码格式）
   INDICES: [
     { code: '000001.SS', name: '上证指数', key: 'sh000001' },
