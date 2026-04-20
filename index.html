@@ -13,123 +13,105 @@
     <div class="logo">📈 BBDA 选股系统</div>
     <div class="header-right">
       <span id="lastUpdate" class="muted">—</span>
-      <button id="refreshBtn" class="btn-primary" onclick="refreshData()">
-        🔄 刷新数据
-      </button>
+      <button id="refreshBtn" class="btn-primary" onclick="refreshData()">🔄 刷新数据</button>
     </div>
   </header>
 
-  <!-- 主容器 -->
   <main>
 
-    <!-- 第一行：市场环境 -->
+    <!-- 第一行：市场环境（指标+标准1:1对应） -->
     <section class="card-row">
-      <div class="card market-overview">
+      <div class="card">
         <h2>市场环境</h2>
-        <div class="metric-grid">
-          <div class="metric">
-            <span class="metric-label">大盘 β</span>
-            <span id="beta" class="metric-value">—</span>
+        <!-- 指标行 -->
+        <div class="metric-row">
+          <div class="metric-block">
+            <div class="metric-value-large" id="beta">—</div>
+            <div class="metric-sub">大盘 β</div>
+            <div class="std-tag">avg(四大指数涨跌幅)</div>
+            <div class="std-scale">
+              <span class="scale-item green">强势 &gt;+0.5%</span>
+              <span class="scale-item yellow">中性 ±0.5%</span>
+              <span class="scale-item red">弱势 &lt;-0.5%</span>
+            </div>
           </div>
-          <div class="metric">
-            <span class="metric-label">情绪温度</span>
-            <span id="sentiment" class="metric-value">—</span>
+          <div class="metric-block">
+            <div class="metric-value-large" id="sentiment">—°</div>
+            <div class="metric-sub">情绪温度</div>
+            <div class="std-tag">=50 + 涨跌幅×30</div>
+            <div class="std-scale">
+              <span class="scale-item green">高亢 75-100°</span>
+              <span class="scale-item yellow">中性 40-74°</span>
+              <span class="scale-item red">低迷 0-39°</span>
+            </div>
           </div>
-          <div class="metric">
-            <span class="metric-label">适合度评分</span>
-            <span id="fitness" class="metric-value">—</span>
+          <div class="metric-block">
+            <div class="metric-value-large" id="fitness">—</div>
+            <div class="metric-sub">适合度评分</div>
+            <div class="std-tag">=50 + 涨跌幅×8</div>
+            <div class="std-scale">
+              <span class="scale-item green">适合建仓 65-100</span>
+              <span class="scale-item yellow">中性观望 40-64</span>
+              <span class="scale-item red">不适合 0-39</span>
+            </div>
           </div>
-          <div class="metric">
-            <span class="metric-label">仓位建议</span>
-            <span id="position" class="metric-value">—</span>
+          <div class="metric-block">
+            <div class="metric-value-large" id="position">—</div>
+            <div class="metric-sub">仓位建议</div>
+            <div class="std-tag">β + 适合度联合决策</div>
+            <div class="std-scale">
+              <span class="scale-item green">满仓/重仓 强势</span>
+              <span class="scale-item yellow">轻仓/观望 中性</span>
+              <span class="scale-item red">空仓/减仓 弱势</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 第二行：关注指数 + 选股漏斗 -->
-    <section class="card-row two-col">
-
-      <!-- 关注指数 -->
+    <!-- 第二行：指数 -->
+    <section class="card-row">
       <div class="card">
         <h2>关注指数</h2>
-        <div class="index-list" id="indexList">
-          <div class="index-item">
-            <span class="index-name">上证指数</span>
-            <div class="index-bar-wrap">
-              <div class="index-bar" id="bar_sh000001" style="width:0%"></div>
-            </div>
-            <span class="index-score" id="score_sh000001">—</span>
-          </div>
-          <div class="index-item">
-            <span class="index-name">深证成指</span>
-            <div class="index-bar-wrap">
-              <div class="index-bar" id="bar_sz399001" style="width:0%"></div>
-            </div>
-            <span class="index-score" id="score_sz399001">—</span>
-          </div>
-          <div class="index-item">
-            <span class="index-name">创业板指</span>
-            <div class="index-bar-wrap">
-              <div class="index-bar" id="bar_sz399006" style="width:0%"></div>
-            </div>
-            <span class="index-score" id="score_sz399006">—</span>
-          </div>
-          <div class="index-item">
-            <span class="index-name">沪深300</span>
-            <div class="index-bar-wrap">
-              <div class="index-bar" id="bar_sh000300" style="width:0%"></div>
-            </div>
-            <span class="index-score" id="score_sh000300">—</span>
-          </div>
-        </div>
-        <div class="index-summary">
-          <span>综合得分：</span>
-          <strong id="totalScore">—</strong>
-        </div>
+        <div class="index-list" id="indexList"></div>
       </div>
-
-      <!-- 选股漏斗 -->
-      <div class="card">
-        <h2>选股漏斗 <span class="muted small">今日扫描</span></h2>
-        <div class="stock-list" id="stockList">
-          <div class="empty-state">点击「刷新数据」开始扫描</div>
-        </div>
-      </div>
-
     </section>
 
-    <!-- 第三行：持仓监控 -->
+    <!-- 第三行：选股漏斗（2×2布局） -->
     <section class="card-row">
       <div class="card">
-        <h2>持仓监控</h2>
+        <h2>选股漏斗 <span class="muted small" id="funnelSubtitle">L1→L2→L3→L4</span></h2>
+        <div class="funnel-grid" id="funnelStages"></div>
+      </div>
+    </section>
+
+    <!-- 第四行：持仓 -->
+    <section class="card-row">
+      <div class="card">
+        <h2>持仓监控 <span class="muted small" id="holdingCount"></span></h2>
         <div class="holdings-table-wrap">
           <table class="holdings-table" id="holdingsTable">
             <thead>
               <tr>
-                <th>股票名称</th>
-                <th>代码</th>
-                <th>成本价</th>
-                <th>现价</th>
-                <th>盈亏率</th>
-                <th>止损线</th>
-                <th>状态</th>
+                <th>股票名称</th><th>代码</th><th>板块</th>
+                <th>成本价</th><th>现价</th><th>盈亏%</th>
+                <th>盈亏额</th><th>止损线</th><th>市值</th><th>状态</th>
               </tr>
             </thead>
             <tbody id="holdingsBody">
-              <tr><td colspan="7" class="empty-state">暂无持仓数据</td></tr>
+              <tr><td colspan="10" class="empty-state">暂无持仓数据</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- 底部日志 -->
+    <!-- 第五行：日志 -->
     <section class="card-row">
       <div class="card log-card">
         <h2>操作日志</h2>
         <div class="log-area" id="logArea">
-          <div class="log-line">系统就绪，等待刷新...</div>
+          <div class="log-line">系统就绪 v4.2，等待刷新...</div>
         </div>
       </div>
     </section>
@@ -137,7 +119,7 @@
   </main>
 
   <footer>
-    BBDA 选股系统 v1.0 — 数据来源：Yahoo Finance / Tushare
+    BBDA 选股系统 v4.2 — 数据来源：腾讯财经（A股）
   </footer>
 
   <script src="js/app.js"></script>

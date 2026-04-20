@@ -1,5 +1,5 @@
 /* ===========================
-   BBDA 选股系统 - 深色股票主题
+   BBDA 选股系统 v4.2
    =========================== */
 
 :root {
@@ -8,8 +8,8 @@
   --border:    #30363d;
   --text:      #e6edf3;
   --muted:     #8b949e;
-  --green:     #3fb950;
-  --red:       #f85149;
+  --green:     #f85149;   /* 涨（红）A股 */
+  --red:       #3fb950;   /* 跌（绿）A股 */
   --yellow:    #d29922;
   --blue:      #58a6ff;
   --accent:    #1f6feb;
@@ -39,11 +39,8 @@ header {
   top: 0;
   z-index: 100;
 }
-
 .logo { font-size: 18px; font-weight: 700; color: var(--blue); }
-
 .header-right { display: flex; align-items: center; gap: 16px; }
-
 .muted { color: var(--muted); font-size: 13px; }
 
 /* ---- Buttons ---- */
@@ -64,7 +61,7 @@ header {
 /* ---- Main ---- */
 main {
   flex: 1;
-  max-width: 1280px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   padding: 20px 24px;
@@ -80,33 +77,34 @@ main {
   border-radius: var(--radius);
   padding: 20px;
 }
-
 .card h2 {
   font-size: 15px;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .5px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.card h2 .small {
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  color: var(--muted);
+}
 
-.card h2 .small { font-size: 12px; font-weight: 400; text-transform: none; }
-
-/* ---- Card Rows ---- */
-.card-row { display: flex; flex-direction: column; gap: 16px; }
-.card-row.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-/* ---- Market Overview Metrics ---- */
-.metric-grid {
+/* =============================================
+   市场环境 — 1:1 指标+标准对应
+   ============================================= */
+.metric-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
-.metric {
+.metric-block {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -114,138 +112,237 @@ main {
   text-align: center;
 }
 
-.metric-label {
-  display: block;
-  font-size: 12px;
+.metric-value-large {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.metric-sub {
+  font-size: 11px;
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
   margin-bottom: 6px;
 }
 
-.metric-value {
-  display: block;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
+.std-tag {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 8px;
 }
 
-/* ---- Index Bars ---- */
-.index-list { display: flex; flex-direction: column; gap: 10px; }
-
-.index-item {
+.std-scale {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.scale-item {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.scale-item.green  { color: var(--green); background: rgba(248,81,73,.12); }
+.scale-item.yellow { color: var(--yellow); background: rgba(210,153,34,.12); }
+.scale-item.red    { color: var(--red); background: rgba(63,185,80,.12); }
+
+/* =============================================
+   指数
+   ============================================= */
+.index-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
-
-.index-name { width: 80px; font-size: 13px; color: var(--muted); flex-shrink: 0; }
-
-.index-bar-wrap {
-  flex: 1;
-  height: 8px;
-  background: var(--bg);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.index-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--blue), var(--accent));
-  border-radius: 4px;
-  transition: width .6s ease;
-}
-
-.index-score { width: 50px; text-align: right; font-size: 13px; font-weight: 700; }
-
-.index-summary {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  font-size: 14px;
-  color: var(--muted);
+.index-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.index-summary strong { font-size: 20px; color: var(--blue); }
-
-/* ---- Stock List ---- */
-.stock-list { display: flex; flex-direction: column; gap: 8px; }
-
-.stock-item {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 4px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px 14px;
-  cursor: pointer;
-  transition: border-color .2s;
+}
+.index-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.index-name { font-size: 12px; color: var(--muted); }
+.index-actual { font-size: 15px; font-weight: 700; }
+.index-bottom { display: flex; align-items: center; gap: 6px; }
+.index-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.index-bar { height: 100%; border-radius: 3px; transition: width .6s; min-width: 3px; }
+.index-score { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.index-item.index-us { border-style: dashed; opacity: .7; }
+.index-us-label { font-size: 9px; color: var(--muted); }
+
+/* =============================================
+   选股漏斗 — 2×2 网格，大字体
+   ============================================= */
+.funnel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.stock-item:hover { border-color: var(--blue); }
+.funnel-layer {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
 
-.stock-name { font-weight: 600; font-size: 14px; }
-.stock-code { font-size: 12px; color: var(--muted); }
-.stock-sector { font-size: 12px; color: var(--blue); }
+.funnel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.03);
+  border-bottom: 1px solid var(--border);
+}
+.funnel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+.funnel-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
 
-.stock-score {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 13px;
+.layer-standards {
+  padding: 8px 14px;
+  background: rgba(88,166,255,.04);
+  border-bottom: 1px solid var(--border);
+}
+.std-line {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.std-line:first-child {
+  color: var(--yellow);
   font-weight: 700;
-  background: var(--accent);
-  color: #fff;
+  font-size: 12px;
+}
+
+.funnel-bar-wrap {
+  height: 3px;
+  background: var(--border);
+}
+.funnel-bar {
+  height: 100%;
+  transition: width .6s;
+  border-radius: 0 2px 2px 0;
+}
+
+.funnel-rows {
+  padding: 4px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.funnel-rows::-webkit-scrollbar { width: 4px; }
+.funnel-rows::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* 股票行 — 大字体 */
+.funnel-row {
+  display: grid;
+  /* 列：股票名(1.5fr) 板块(1fr) 涨跌幅(62px) [参数池] 评分(80px) */
+  grid-template-columns: 1fr 52px 62px auto 76px;
+  gap: 5px;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 13px;       /* 大字体 */
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.funnel-row:last-child { border-bottom: none; }
+.funnel-row:hover { background: rgba(255,255,255,.03); }
+
+.funnel-name {
+  font-weight: 700;
+  font-size: 14px;      /* 股票名更大 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.funnel-sector {
+  font-size: 11px;
+  color: var(--muted);
   white-space: nowrap;
 }
-
-.empty-state {
-  text-align: center;
-  color: var(--muted);
+.funnel-score {
+  font-weight: 800;
   font-size: 13px;
-  padding: 24px;
+  white-space: nowrap;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
 }
 
-/* ---- Holdings Table ---- */
-.holdings-table-wrap { overflow-x: auto; }
+/* 参数标签 */
+.param {
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pct-param    { background: rgba(248,81,73,.15); color: var(--green); }
+.vol-param    { background: rgba(210,153,34,.15); color: var(--yellow); }
+.fund-param   { background: rgba(88,166,255,.15); color: var(--blue); }
+.sector-param { background: rgba(63,185,80,.15); color: var(--red); }
 
+.action-reason {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ---- Holdings ---- */
+.holdings-table-wrap { overflow-x: auto; }
 .holdings-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
-
 .holdings-table th {
   text-align: left;
   color: var(--muted);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border);
 }
-
 .holdings-table td {
-  padding: 10px 12px;
+  padding: 9px 10px;
   border-bottom: 1px solid var(--border);
 }
-
 .holdings-table tr:last-child td { border-bottom: none; }
-
 .holdings-table tr:hover td { background: rgba(255,255,255,.02); }
-
-.positive { color: var(--green); font-weight: 600; }
-.negative { color: var(--red); font-weight: 600; }
-.neutral  { color: var(--muted); }
-
+.holding-name { font-weight: 600; }
+.positive { color: var(--green); font-weight: 700; }
+.negative { color: var(--red); font-weight: 700; }
 .status-ok       { color: var(--green); }
 .status-warning  { color: var(--yellow); }
-.status-danger   { color: var(--red); font-weight: 700; }
+.status-danger   { color: var(--red); font-weight: 800; }
 
 /* ---- Log ---- */
-.log-card { }
 .log-area {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -257,7 +354,6 @@ main {
   font-size: 12px;
   line-height: 1.8;
 }
-
 .log-line { color: var(--muted); }
 .log-line.success { color: var(--green); }
 .log-line.error   { color: var(--red); }
@@ -273,8 +369,14 @@ footer {
 }
 
 /* ---- Responsive ---- */
+@media (max-width: 1100px) {
+  .metric-row { grid-template-columns: 1fr 1fr; }
+  .index-list { grid-template-columns: 1fr 1fr; }
+  .funnel-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
-  .card-row.two-col { grid-template-columns: 1fr; }
-  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .metric-row { grid-template-columns: 1fr 1fr; }
+  .index-list { grid-template-columns: 1fr 1fr; }
+  .funnel-grid { grid-template-columns: 1fr; }
   main { padding: 12px; }
 }
