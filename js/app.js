@@ -65,7 +65,7 @@ function log(msg, type = 'normal') {
 
 function $(id) { return document.getElementById(id); }
 
-async function fetchWithTimeout(url, ms = 10000) {
+async function fetchWithTimeout(url, ms = 30000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), ms);
   try {
