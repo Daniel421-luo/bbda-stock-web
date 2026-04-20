@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BBDA 选股系统</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header>
+    <div class="logo">📈 BBDA 选股系统</div>
+    <div class="header-right">
+      <span id="lastUpdate" class="muted">—</span>
+      <button id="refreshBtn" class="btn-primary" onclick="refreshData()">
+        🔄 刷新数据
+      </button>
+    </div>
+  </header>
+
+  <!-- 主容器 -->
+  <main>
+
+    <!-- 第一行：市场环境 -->
+    <section class="card-row">
+      <div class="card market-overview">
+        <h2>市场环境</h2>
+        <div class="metric-grid">
+          <div class="metric">
+            <span class="metric-label">大盘 β</span>
+            <span id="beta" class="metric-value">—</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">情绪温度</span>
+            <span id="sentiment" class="metric-value">—</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">适合度评分</span>
+            <span id="fitness" class="metric-value">—</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">仓位建议</span>
+            <span id="position" class="metric-value">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第二行：关注指数 + 选股漏斗 -->
+    <section class="card-row two-col">
+
+      <!-- 关注指数 -->
+      <div class="card">
+        <h2>关注指数</h2>
+        <div class="index-list" id="indexList">
+          <div class="index-item">
+            <span class="index-name">上证指数</span>
+            <div class="index-bar-wrap">
+              <div class="index-bar" id="bar_sh000001" style="width:0%"></div>
+            </div>
+            <span class="index-score" id="score_sh000001">—</span>
+          </div>
+          <div class="index-item">
+            <span class="index-name">深证成指</span>
+            <div class="index-bar-wrap">
+              <div class="index-bar" id="bar_sz399001" style="width:0%"></div>
+            </div>
+            <span class="index-score" id="score_sz399001">—</span>
+          </div>
+          <div class="index-item">
+            <span class="index-name">创业板指</span>
+            <div class="index-bar-wrap">
+              <div class="index-bar" id="bar_sz399006" style="width:0%"></div>
+            </div>
+            <span class="index-score" id="score_sz399006">—</span>
+          </div>
+          <div class="index-item">
+            <span class="index-name">沪深300</span>
+            <div class="index-bar-wrap">
+              <div class="index-bar" id="bar_sh000300" style="width:0%"></div>
+            </div>
+            <span class="index-score" id="score_sh000300">—</span>
+          </div>
+        </div>
+        <div class="index-summary">
+          <span>综合得分：</span>
+          <strong id="totalScore">—</strong>
+        </div>
+      </div>
+
+      <!-- 选股漏斗 -->
+      <div class="card">
+        <h2>选股漏斗 <span class="muted small">今日扫描</span></h2>
+        <div class="stock-list" id="stockList">
+          <div class="empty-state">点击「刷新数据」开始扫描</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 第三行：持仓监控 -->
+    <section class="card-row">
+      <div class="card">
+        <h2>持仓监控</h2>
+        <div class="holdings-table-wrap">
+          <table class="holdings-table" id="holdingsTable">
+            <thead>
+              <tr>
+                <th>股票名称</th>
+                <th>代码</th>
+                <th>成本价</th>
+                <th>现价</th>
+                <th>盈亏率</th>
+                <th>止损线</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="holdingsBody">
+              <tr><td colspan="7" class="empty-state">暂无持仓数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部日志 -->
+    <section class="card-row">
+      <div class="card log-card">
+        <h2>操作日志</h2>
+        <div class="log-area" id="logArea">
+          <div class="log-line">系统就绪，等待刷新...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    BBDA 选股系统 v1.0 — 数据来源：Yahoo Finance / Tushare
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
