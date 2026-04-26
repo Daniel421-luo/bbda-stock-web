@@ -67,6 +67,7 @@
             </div>
             <div class="flex items-center gap-4">
                 <span id="todayDate" class="text-sm text-gray-500"></span>
+                <span id="autoUpdateStatus" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">● 自动更新</span>
                 <button onclick="exportToday()" class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">
                     <i class="fas fa-download"></i>
                 </button>
@@ -505,7 +506,7 @@
             loadData();
             updateUI();
             checkNickname();
-            loadSectorData();
+            loadSectorDataFromServer();
         });
 
         // ========== Nickname ==========
@@ -554,6 +555,43 @@
             if (saved) {
                 const data = JSON.parse(saved);
                 renderSectorData(data);
+            }
+        }
+
+        async function loadSectorDataFromServer() {
+            try {
+                const response = await fetch('data/sector.json?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    renderSectorData(data);
+                    document.getElementById('dataTime').textContent = `数据更新: ${data.update_time || '--'}`;
+                    if (data.indices) autoFillMarketFromIndices(data.indices);
+                    document.getElementById('autoUpdateStatus').className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-600';
+                    document.getElementById('autoUpdateStatus').textContent = '● 自动更新';
+                }
+            } catch (e) {
+                const saved = localStorage.getItem('sector_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    renderSectorData(data);
+                }
+                document.getElementById('autoUpdateStatus').className = 'text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-600';
+                document.getElementById('autoUpdateStatus').textContent = '○ 本地数据';
+            }
+        }
+
+        function autoFillMarketFromIndices(indices) {
+            const hs300 = indices['sh000300'];
+            const zz1000 = indices['sh000852'];
+            if (hs300 && hs300.change !== undefined) {
+                document.getElementById('liquidityScore').value = hs300.change > 0.5 ? '2' : hs300.change < -0.5 ? '0' : '1';
+                document.getElementById('trendScore').value = hs300.change > 0.3 ? '2' : hs300.change < -0.3 ? '0' : '1';
+                if (zz1000 && hs300) {
+                    document.getElementById('zz1000Change').value = zz1000.change || 0;
+                    document.getElementById('hs300Change').value = hs300.change || 0;
+                    updateStyleMatch();
+                }
+                updateMarketDecision();
             }
         }
 
