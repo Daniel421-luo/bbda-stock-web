@@ -84,6 +84,7 @@
         <section class="bg-white rounded-xl shadow-sm p-4 fade-in">
             <h2 class="font-semibold text-gray-800 mb-4">
                 <i class="fas fa-rocket mr-2 text-primary"></i>今日决策
+                <span id="visitorBadge" class="hidden ml-2 px-2 py-0.5 text-xs bg-primary text-white rounded-full"></span>
             </h2>
 
             <!-- 市场状态 -->
@@ -137,6 +138,16 @@
                 <div class="text-lg font-bold text-gray-500">等待评分...</div>
                 <div class="text-sm text-gray-400 mt-1">选择各维度得分获取决策建议</div>
             </div>
+        </section>
+
+        <!-- 打赏区域 -->
+        <section class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl shadow-sm p-6 text-center fade-in">
+            <div class="text-3xl mb-3">☕</div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">觉得好用？请作者喝杯咖啡 ☕</h3>
+            <p class="text-sm text-gray-600 mb-4">您的支持是我持续更新的动力</p>
+            <button onclick="showDonateModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition">
+                <i class="fas fa-heart mr-2"></i>打赏支持
+            </button>
         </section>
 
         <!-- 仓位计算 -->
@@ -321,6 +332,38 @@
         <span id="toastMsg"></span>
     </div>
 
+    <!-- 昵称弹窗 -->
+    <div id="nicknameModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="p-6 text-center">
+                <div class="text-4xl mb-3">👋</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">欢迎使用 BBDA</h3>
+                <p class="text-sm text-gray-500 mb-4">请告诉我你的昵称</p>
+                <input type="text" id="nicknameInput" placeholder="输入昵称" maxlength="20"
+                    class="w-full px-4 py-3 border-2 border-primary rounded-lg text-center text-lg focus:outline-none">
+                <button onclick="saveNickname()" class="w-full mt-3 px-4 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition">
+                    开始使用
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打赏弹窗 -->
+    <div id="donateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="font-semibold text-gray-800">☕ 打赏作者</h3>
+                <button onclick="closeDonateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 text-center">
+                <img src="donate.jpg" alt="微信收款码" class="w-64 h-64 mx-auto rounded-lg shadow-md">
+                <p class="text-sm text-gray-500 mt-4">识别上方二维码<br>金额随意，感谢支持 🙏</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ========== State ==========
         let todayKey = new Date().toISOString().split('T')[0];
@@ -336,7 +379,48 @@
             document.getElementById('tradeTime').value = new Date().toTimeString().slice(0, 5);
             loadData();
             updateUI();
+            checkNickname();
         });
+
+        // ========== Nickname ==========
+        function checkNickname() {
+            const savedNickname = localStorage.getItem('bbda_nickname');
+            if (savedNickname) {
+                document.getElementById('visitorBadge').textContent = savedNickname;
+                document.getElementById('visitorBadge').classList.remove('hidden');
+            } else {
+                document.getElementById('nicknameModal').classList.remove('hidden');
+                document.getElementById('nicknameModal').classList.add('flex');
+                document.getElementById('nicknameInput').focus();
+            }
+        }
+
+        function saveNickname() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (nickname) {
+                localStorage.setItem('bbda_nickname', nickname);
+                document.getElementById('visitorBadge').textContent = nickname;
+                document.getElementById('visitorBadge').classList.remove('hidden');
+                closeNicknameModal();
+                showToast(`欢迎 ${nickname}！`, 'success');
+            }
+        }
+
+        function closeNicknameModal() {
+            document.getElementById('nicknameModal').classList.add('hidden');
+            document.getElementById('nicknameModal').classList.remove('flex');
+        }
+
+        // ========== Donation ==========
+        function showDonateModal() {
+            document.getElementById('donateModal').classList.remove('hidden');
+            document.getElementById('donateModal').classList.add('flex');
+        }
+
+        function closeDonateModal() {
+            document.getElementById('donateModal').classList.add('hidden');
+            document.getElementById('donateModal').classList.remove('flex');
+        }
 
         // ========== Market Decision ==========
         function updateMarketDecision() {
