@@ -2,7 +2,10 @@ name: 更新板块数据
 
 on:
   schedule:
+    # 北京时间 11:05 = UTC 03:05（午盘收盘后）
     - cron: '5 3 * * 1-5'
+    # 北京时间 15:05 = UTC 07:05（尾盘收盘后）
+    - cron: '5 7 * * 1-5'
   workflow_dispatch:
 
 jobs:
