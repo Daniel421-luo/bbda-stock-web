@@ -369,9 +369,9 @@
         </section>
     </main>
 
-    <footer class="text-center py-6 text-gray-400 text-sm">
-        <div class="mb-3">BBDA 股票分析工具 · 六层漏斗选股系统 v1.0 · 适用：主板（60/00），排除ST/创业板/科创板</div>
-        <div class="text-xs text-gray-400" id="welcomeMsg"></div>
+    <footer class="text-center py-6 text-gray-400">
+        <div class="mb-3 text-sm">BBDA 股票分析工具 · 六层漏斗选股系统 v1.0 · 适用：主板（60/00），排除ST/创业板/科创板</div>
+        <div id="welcomeMsg"></div>
     </footer>
 
     <!-- 赞助弹窗 -->
@@ -813,7 +813,7 @@
             }
             userName = name;
             document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('welcomeMsg').textContent = '欢迎 ' + userName + ' · 祝投资顺利';
+            document.getElementById('welcomeMsg').innerHTML = '<span class="text-base font-bold text-indigo-600">🎉 ' + userName + '，祝股票大涨，财富自由！</span>';
         }
 
         // ========== 赞助弹窗 ==========
