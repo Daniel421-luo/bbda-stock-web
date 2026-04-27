@@ -356,7 +356,7 @@
         let trendData = { cond1: false, cond2: false, cond3: false, cond4: false };
         let currentTrend = '--';
 
-        // ========== 数据获取 ==========
+        // ========== 数据获取（东方财富API，支持CORS）==========
 
         function onStockCodeChange() {
             const code = document.getElementById('stockCode').value.trim();
@@ -382,42 +382,49 @@
             document.getElementById('errorMsg').style.display = 'none';
 
             try {
-                // 确定市场前缀：6开头=沪市，0开头=深市
-                let prefix = 'sh';
-                if (code.startsWith('0') || code.startsWith('3')) prefix = 'sz';
+                // 确定市场：6开头=沪市(1)，0/3开头=深市(0)
+                let secid;
+                if (code.startsWith('6')) secid = '1.' + code;
+                else if (code.startsWith('0') || code.startsWith('3')) secid = '0.' + code;
+                else throw new Error('仅支持主板股票（60/00/30开头）');
 
-                // 1. 获取实时价格
-                const priceRes = await fetch(
-                    `https://hq.sinajs.cn/list=${prefix}${code}`,
-                    { headers: { 'Referer': 'https://finance.sina.com.cn' } }
-                );
-                const priceText = await priceRes.text();
-                const priceMatch = priceText.match(/"([^"]+)"/);
-                if (!priceMatch) throw new Error('股票代码不存在');
+                // 1. 获取实时价格（东方财富，支持CORS）
+                const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170`;
+                const priceRes = await fetch(priceUrl, {
+                    headers: { 'Referer': 'https://quote.eastmoney.com' }
+                });
+                const priceJson = await priceRes.json();
 
-                const fields = priceMatch[1].split(',');
-                const name = fields[0];
-                const currentPrice = parseFloat(fields[3]);
-                const yesterdayClose = parseFloat(fields[2]);
-                const todayOpen = parseFloat(fields[1]);
-                const high = parseFloat(fields[4]);
-                const low = parseFloat(fields[5]);
-                const volume = parseInt(fields[8]); // 成交量（手）
-                const pctChange = ((currentPrice / yesterdayClose - 1) * 100).toFixed(2);
+                if (!priceJson.data || !priceJson.data.f43) {
+                    throw new Error('股票代码不存在或已停牌');
+                }
 
-                // 2. 获取K线数据（30日）
-                const klineRes = await fetch(
-                    `https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=${prefix}${code}&scale=240&ma=no&datalen=30`,
-                    { headers: { 'Referer': 'https://finance.sina.com.cn' } }
-                );
+                const name = priceJson.data.f58; // 名称
+                const currentPrice = priceJson.data.f43 / 100; // 现价（分→元）
+                const yesterdayClose = priceJson.data.f44 / 100; // 昨收
+                const todayOpen = priceJson.data.f45 / 100; // 今开
+                const high = priceJson.data.f46 / 100; // 最高
+                const low = priceJson.data.f47 / 100; // 最低
+                const volume = priceJson.data.f48; // 成交量（手）
+                const sector = priceJson.data.f57 || '--'; // 板块
+                const pctChange = priceJson.data.f170 / 100; // 涨跌幅（%）
+                const amount = priceJson.data.f60; // 成交额
+
+                // 2. 获取30日K线数据
+                const klineUrl = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=101&fqt=1&lmt=30&end=20500101`;
+                const klineRes = await fetch(klineUrl, {
+                    headers: { 'Referer': 'https://quote.eastmoney.com' }
+                });
                 const klineJson = await klineRes.json();
 
-                if (!Array.isArray(klineJson) || klineJson.length < 20) {
+                if (!klineJson.data || !klineJson.data.klines || klineJson.data.klines.length < 20) {
                     throw new Error('K线数据不足，无法计算均线');
                 }
 
-                const closes = klineJson.map(d => parseFloat(d.close));
-                const vols = klineJson.map(d => parseInt(d.volume));
+                // 解析K线：日期,开,收,高,低,成交量,成交额,振幅
+                const klines = klineJson.data.klines;
+                const closes = klines.map(k => parseFloat(k.split(',')[2]));
+                const vols = klines.map(k => parseInt(k.split(',')[5]));
 
                 const ma5 = avg(closes.slice(-5));
                 const ma10 = avg(closes.slice(-10));
@@ -434,23 +441,10 @@
 
                 stockData = {
                     name, currentPrice, yesterdayClose, todayOpen, high, low,
-                    pctChange, closes, vols,
+                    pctChange, closes, vols, amount,
                     ma5, ma10, ma20, ma10_prev, ma20_prev,
-                    v5, v20, volRatio, recentHigh
+                    v5, v20, volRatio, recentHigh, sector
                 };
-
-                // 3. 尝试获取板块信息（东方财富）
-                let sector = '--';
-                try {
-                    const sectorRes = await fetch(
-                        `https://push2.eastmoney.com/api/qt/stock/get?secid=${prefix === 'sh' ? '1.' : '0.'}${code}&fields=f57`,
-                        { headers: { 'Referer': 'https://quote.eastmoney.com' } }
-                    );
-                    const sectorJson = await sectorRes.json();
-                    if (sectorJson.data && sectorJson.data.f57) {
-                        sector = sectorJson.data.f57;
-                    }
-                } catch (e) { /* 板块获取失败不影响主流程 */ }
 
                 // 更新界面
                 displayStockInfo(name, currentPrice, pctChange, sector);
@@ -484,7 +478,7 @@
             const pctNum = parseFloat(pct);
             const colorClass = pctNum > 0 ? 'text-red-500' : pctNum < 0 ? 'text-green-500' : 'text-gray-800';
             document.getElementById('priceDisplay').innerHTML =
-                `${price.toFixed(2)} <span class="${colorClass} text-sm">${pctNum > 0 ? '+' : ''}${pct}%</span>`;
+                `${price.toFixed(2)} <span class="${colorClass} text-sm font-bold">${pctNum > 0 ? '+' : ''}${pctNum.toFixed(2)}%</span>`;
             document.getElementById('priceDisplay').className = 'px-4 py-3 text-lg font-bold text-gray-800';
 
             document.getElementById('sectorDisplay').textContent = sector;
@@ -510,18 +504,15 @@
             trendData.cond3 = volRatio > 1.2;
             // cond4 由用户手动选择
 
-            // 更新显示
             setCondDisplay('cond1Display', trendData.cond1);
             setCondDisplay('cond2Display', trendData.cond2);
             setCondDisplay('cond3Display', trendData.cond3);
 
-            // 显示均线
             document.getElementById('ma5Display').textContent = stockData.ma5.toFixed(2);
             document.getElementById('ma10Display').textContent = stockData.ma10.toFixed(2);
             document.getElementById('ma20Display').textContent = stockData.ma20.toFixed(2);
             document.getElementById('volRatioDisplay').textContent = stockData.volRatio.toFixed(2);
 
-            // 回踩区间
             const zoneLow = (stockData.ma10 * 0.97).toFixed(2);
             const zoneHigh = (stockData.ma10 * 1.03).toFixed(2);
             document.getElementById('buyZoneDisplay').textContent = `${zoneLow}~${zoneHigh}`;
@@ -573,29 +564,23 @@
 
         function updateKeyLevels() {
             if (!stockData) return;
-
-            const { recentHigh, ma10 } = stockData;
-
+            const { recentHigh } = stockData;
             document.getElementById('target1Display').textContent = (recentHigh * 1.15).toFixed(2);
             document.getElementById('target2Display').textContent = (recentHigh * 1.30).toFixed(2);
-
             updateStopLoss();
         }
 
         function updateStopLoss() {
             if (!stockData) return;
-
             const cost = parseFloat(document.getElementById('costPrice').value);
             if (!cost || cost <= 0) {
                 document.getElementById('stopLossDisplay').textContent = '--';
                 document.getElementById('stopLossPct').textContent = '--';
                 return;
             }
-
-            const total = scores.rps + scores.dragon + scores.volume + scores.cap + scores.catalyst + scores.chips;
+            const total = Object.values(scores).reduce((a, b) => a + b, 0);
             const stopPct = total >= 24 ? 7 : 2;
             const stopLoss = (cost * (1 - stopPct / 100)).toFixed(2);
-
             document.getElementById('stopLossDisplay').textContent = stopLoss;
             document.getElementById('stopLossPct').textContent = `成本-${stopPct}%`;
         }
@@ -604,10 +589,9 @@
 
         function autoSetScores() {
             if (!stockData) return;
-
             const { volRatio, pctChange, currentPrice, ma10 } = stockData;
 
-            // 量价质量：根据量比和价格位置
+            // 量价质量
             let volScore = 3;
             if (volRatio > 1.5 && pctChange > 0) volScore = 5;
             else if (volRatio > 1.2) volScore = 4;
@@ -615,25 +599,19 @@
             else volScore = 1;
             setScore('volume', volScore);
 
-            // RPS：暂时默认3分（需要板块排名数据）
-            setScore('rps', 3);
-
-            // 龙头：暂时默认3分
-            setScore('dragon', 3);
-
-            // 市值：暂时默认3分
-            setScore('cap', 3);
-
-            // 催化：暂时默认3分
-            setScore('catalyst', 3);
-
-            // 结构：根据价格与MA10的关系
+            // 结构（价格与MA10关系）
             let chipsScore = 3;
             const priceToMA10 = currentPrice / ma10;
-            if (priceToMA10 > 1.05) chipsScore = 4; // 突破
-            else if (priceToMA10 >= 0.97) chipsScore = 3; // 正常
-            else chipsScore = 2; // 偏离过大
+            if (priceToMA10 > 1.05) chipsScore = 4;
+            else if (priceToMA10 >= 0.97) chipsScore = 3;
+            else chipsScore = 2;
             setScore('chips', chipsScore);
+
+            // RPS、龙头、市值、催化：默认3分，需人工判断
+            setScore('rps', 3);
+            setScore('dragon', 3);
+            setScore('cap', 3);
+            setScore('catalyst', 3);
         }
 
         function setScore(dim, val) {
@@ -645,8 +623,7 @@
         // ========== 结果展示 ==========
 
         function updateScore(dim) {
-            const slider = document.getElementById(dim + 'Slider');
-            scores[dim] = parseInt(slider.value);
+            scores[dim] = parseInt(document.getElementById(dim + 'Slider').value);
             document.getElementById(dim + 'Score').textContent = scores[dim];
             updateResult();
             updateStopLoss();
@@ -655,7 +632,7 @@
         function updateResult() {
             if (!stockData) return;
 
-            const total = scores.rps + scores.dragon + scores.volume + scores.cap + scores.catalyst + scores.chips;
+            const total = Object.values(scores).reduce((a, b) => a + b, 0);
             let grade, advice, gradeClass, adviceClass, adviceOperation;
 
             if (total >= 24) {
@@ -672,7 +649,6 @@
                 adviceOperation = '回避'; advice = '风险大于机会'; adviceClass = 'bg-red-500';
             }
 
-            // 趋势override
             if (currentTrend === '下跌' && grade !== 'D') {
                 adviceOperation = '减仓';
                 advice = '趋势走弱，考虑减仓';
@@ -683,7 +659,7 @@
             document.getElementById('gradeBox').className = gradeClass + ' text-center p-4 rounded-2xl';
             document.getElementById('gradeDisplay').textContent = grade;
             document.getElementById('trendResult').textContent = currentTrend;
-            document.getElementById('sectorResult').textContent = stockData.name ? '--' : '--';
+            document.getElementById('sectorResult').textContent = stockData.sector;
 
             document.getElementById('rpsResult').textContent = scores.rps + '分';
             document.getElementById('dragonResult').textContent = scores.dragon + '分';
@@ -696,7 +672,6 @@
             document.getElementById('adviceOperation').textContent = adviceOperation;
             document.getElementById('adviceText').textContent = advice;
 
-            // 标准化输出
             const { currentPrice, ma10, ma20, recentHigh, pctChange, name } = stockData;
             const code = document.getElementById('stockCode').value.trim();
             const cost = parseFloat(document.getElementById('costPrice').value) || 0;
@@ -708,14 +683,14 @@
 
 【评级】${grade}级（${total}/30分）
 【趋势】${currentTrend}
-【板块】${document.getElementById('sectorDisplay').textContent}
+【板块】${stockData.sector}
 
 【六维评分】
   ①RPS: ${scores.rps}分  ②龙头: ${scores.dragon}分  ③量价: ${scores.volume}分
   ④市值: ${scores.cap}分  ⑤催化: ${scores.catalyst}分  ⑥结构: ${scores.chips}分
 
 【关键价位】
-  现价: ${currentPrice.toFixed(2)}元（${pctChange > 0 ? '+' : ''}${pctChange}%）
+  现价: ${currentPrice.toFixed(2)}元（${pctChange > 0 ? '+' : ''}${pctChange.toFixed(2)}%）
   支撑: MA10=${ma10.toFixed(2)} / MA20=${ma20.toFixed(2)}
   回踩区间: ${buyZoneLow}~${buyZoneHigh}元（MA10±3%）
   止损: ${stopLoss}元${cost > 0 ? '（-' + (total >= 24 ? '7%' : '2%') + '）' : ''}
