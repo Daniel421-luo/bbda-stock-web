@@ -160,7 +160,7 @@
                 </div>
             </div>
             <!-- 均线数据 -->
-            <div class="mt-4 grid grid-cols-3 md:grid-cols-5 gap-3">
+            <div class="mt-4 grid grid-cols-3 md:grid-cols-6 gap-3">
                 <div class="text-center p-3 bg-blue-50 rounded-xl">
                     <div class="text-xs text-gray-500">MA5</div>
                     <div id="ma5Display" class="font-bold text-blue-600">--</div>
@@ -180,6 +180,10 @@
                 <div class="text-center p-3 bg-green-50 rounded-xl">
                     <div class="text-xs text-gray-500">回踩区间</div>
                     <div id="buyZoneDisplay" class="font-bold text-green-600">--</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-xl">
+                    <div class="text-xs text-gray-500">主力净流入</div>
+                    <div id="mainFlowDisplay" class="font-bold text-red-600">--</div>
                 </div>
             </div>
         </section>
@@ -435,8 +439,8 @@
                 else if (cleanCode.startsWith('0') || cleanCode.startsWith('3')) secid = '0.' + cleanCode;
                 else throw new Error('仅支持主板股票（60/00/30开头）');
 
-                // 1. 获取实时价格（东方财富，支持CORS）
-                const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170`;
+                // 1. 获取实时价格+资金流向（东方财富，支持CORS）
+                const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f62,f184,f169,f170`;
                 const priceRes = await fetch(priceUrl, {
                     headers: { 'Referer': 'https://quote.eastmoney.com', 'Accept': 'application/json' }
                 });
@@ -461,6 +465,8 @@
                 const sector = priceJson.data.f57 || '--'; // 板块
                 const pctChange = priceJson.data.f170 / 100; // 涨跌幅（%）
                 const amount = priceJson.data.f60; // 成交额
+                const mainNetInflow = priceJson.data.f62 / 10000; // 主力净流入（万元）
+                const mainNetInflowPct = priceJson.data.f184 / 100; // 主力净流入占比（%）
 
                 // 2. 获取30日K线数据
                 const klineUrl = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=101&fqt=1&lmt=30&end=20500101`;
@@ -495,7 +501,8 @@
                     name, currentPrice, yesterdayClose, todayOpen, high, low,
                     pctChange, closes, vols, amount,
                     ma5, ma10, ma20, ma10_prev, ma20_prev,
-                    v5, v20, volRatio, recentHigh, sector
+                    v5, v20, volRatio, recentHigh, sector,
+                    mainNetInflow, mainNetInflowPct
                 };
 
                 // 更新界面
@@ -549,7 +556,7 @@
         function calculateTrend() {
             if (!stockData) return;
 
-            const { currentPrice, ma20, ma20_prev, volRatio } = stockData;
+            const { currentPrice, ma20, ma20_prev, volRatio, mainNetInflow, mainNetInflowPct } = stockData;
 
             trendData.cond1 = currentPrice > ma20;
             trendData.cond2 = ma20 > ma20_prev;
@@ -568,6 +575,16 @@
             const zoneLow = (stockData.ma10 * 0.97).toFixed(2);
             const zoneHigh = (stockData.ma10 * 1.03).toFixed(2);
             document.getElementById('buyZoneDisplay').textContent = `${zoneLow}~${zoneHigh}`;
+
+            // 资金流入显示
+            if (mainNetInflow !== undefined && mainNetInflow !== null) {
+                const inflowStr = mainNetInflow >= 0
+                    ? `+${mainNetInflow.toFixed(0)}万`
+                    : `${mainNetInflow.toFixed(0)}万`;
+                const flowEl = document.getElementById('mainFlowDisplay');
+                flowEl.textContent = inflowStr;
+                flowEl.className = 'font-bold ' + (mainNetInflow >= 0 ? 'text-red-600' : 'text-green-600');
+            }
 
             updateTrendUI();
         }
@@ -641,14 +658,16 @@
 
         function autoSetScores() {
             if (!stockData) return;
-            const { volRatio, pctChange, currentPrice, ma10 } = stockData;
+            const { volRatio, pctChange, currentPrice, ma10, mainNetInflow, mainNetInflowPct } = stockData;
 
-            // 量价质量
+            // 量价质量：量比 + 资金流入综合判断
             let volScore = 3;
-            if (volRatio > 1.5 && pctChange > 0) volScore = 5;
-            else if (volRatio > 1.2) volScore = 4;
-            else if (volRatio >= 0.8) volScore = 3;
-            else volScore = 1;
+            if (volRatio > 1.5 && pctChange > 0 && mainNetInflow > 0) volScore = 5;
+            else if (volRatio > 1.2 && mainNetInflow > 0) volScore = 4;
+            else if (volRatio > 1.5 && pctChange > 0) volScore = 4;
+            else if (volRatio >= 0.8 && mainNetInflow >= 0) volScore = 3;
+            else if (mainNetInflow < 0 && volRatio < 0.8) volScore = 1;
+            else volScore = 2;
             setScore('volume', volScore);
 
             // 结构（价格与MA10关系）
