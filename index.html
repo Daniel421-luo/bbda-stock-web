@@ -754,6 +754,7 @@
   仓位：${grade === 'A' ? '标准仓40-60%' : grade === 'B' ? '40-60%' : grade === 'C' ? '观察' : '--'}`;
 
             document.getElementById('outputFormat').textContent = output;
+            showSponsorBtn();
         }
 
         // ========== 重置 ==========
@@ -763,6 +764,7 @@
             document.getElementById('costPrice').value = '';
             document.getElementById('cond4Select').value = 'false';
             hideAllSections();
+            document.getElementById('sponsorBtn').style.display = 'none';
             document.getElementById('stockNameDisplay').textContent = '--';
             document.getElementById('stockNameDisplay').className = 'px-4 py-3 text-lg font-medium text-gray-400';
             document.getElementById('priceDisplay').textContent = '--';
@@ -806,15 +808,9 @@
             document.getElementById('sponsorModal').style.display = 'none';
         }
 
-        // ========== 分析完成后显示赞助按钮 ==========
-
-        const originalUpdateResult = updateResult;
-        updateResult = function() {
-            originalUpdateResult.apply(this, arguments);
-            if (stockData) {
-                document.getElementById('sponsorBtn').style.display = 'block';
-            }
-        };
+        function showSponsorBtn() {
+            document.getElementById('sponsorBtn').style.display = 'block';
+        }
     </script>
 </body>
 </html>
