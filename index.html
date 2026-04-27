@@ -382,20 +382,29 @@
             document.getElementById('errorMsg').style.display = 'none';
 
             try {
+                // 清理代码：移除非数字字符
+                const cleanCode = code.replace(/[^0-9]/g, '');
+                if (!cleanCode) throw new Error('请输入有效的股票代码');
+
                 // 确定市场：6开头=沪市(1)，0/3开头=深市(0)
                 let secid;
-                if (code.startsWith('6')) secid = '1.' + code;
-                else if (code.startsWith('0') || code.startsWith('3')) secid = '0.' + code;
+                if (cleanCode.startsWith('6')) secid = '1.' + cleanCode;
+                else if (cleanCode.startsWith('0') || cleanCode.startsWith('3')) secid = '0.' + cleanCode;
                 else throw new Error('仅支持主板股票（60/00/30开头）');
 
                 // 1. 获取实时价格（东方财富，支持CORS）
                 const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170`;
                 const priceRes = await fetch(priceUrl, {
-                    headers: { 'Referer': 'https://quote.eastmoney.com' }
+                    headers: { 'Referer': 'https://quote.eastmoney.com', 'Accept': 'application/json' }
                 });
+                if (!priceRes.ok) throw new Error(`网络请求失败: ${priceRes.status}`);
                 const priceJson = await priceRes.json();
 
-                if (!priceJson.data || !priceJson.data.f43) {
+                if (!priceJson.data) {
+                    const msg = priceJson.rc === 0 ? '股票代码不存在' : `API返回错误: ${priceJson.rt}`;
+                    throw new Error(msg || '股票代码不存在或已停牌');
+                }
+                if (priceJson.data.f43 === undefined || priceJson.data.f43 === null) {
                     throw new Error('股票代码不存在或已停牌');
                 }
 
