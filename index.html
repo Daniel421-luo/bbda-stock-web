@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BBDA 选股系统 v4.4</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+    <title>BBDA 股票分析工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -17,11 +16,6 @@
                         success: '#10b981',
                         warning: '#f59e0b',
                         danger: '#ef4444',
-                        surface: '#ffffff',
-                    },
-                    boxShadow: {
-                        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.08)',
-                        'card-hover': '0 8px 30px -4px rgba(0, 0, 0, 0.12)',
                     },
                     borderRadius: {
                         '2xl': '1rem',
@@ -32,1013 +26,543 @@
         }
     </script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card:hover { box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.12); transform: translateY(-2px); }
-        .pulse-green { animation: pulseGreen 2s infinite; }
-        @keyframes pulseGreen { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); } }
-        .pulse-red { animation: pulseRed 2s infinite; }
-        @keyframes pulseRed { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); } }
-        textarea::placeholder { color: #94a3b8; }
-        select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
-        .sector-item { transition: all 0.2s; }
-        .sector-item:hover { background: #f1f5f9; }
-        input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -8px rgba(0,0,0,0.15); }
+        .grade-a { background: linear-gradient(135deg, #10b981, #059669); }
+        .grade-b { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .grade-c { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .grade-d { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .slider { -webkit-appearance: none; height: 8px; background: #e5e7eb; border-radius: 4px; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #6366f1; border-radius: 50%; cursor: pointer; }
+        .result-fade { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        input:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
     </style>
 </head>
-<body class="pb-8">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen pb-12">
     <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-primary to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <span class="text-xl">📈</span>
+                <div class="w-10 h-10 bg-gradient-to-br from-primary to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span class="text-xl">📊</span>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-gray-800">BBDA 选股系统</h1>
-                    <span class="text-xs text-primary font-medium">v4.4</span>
+                    <h1 class="text-lg font-bold text-gray-800">BBDA 股票分析</h1>
+                    <p class="text-xs text-gray-500">六维度价值评估系统</p>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <span id="todayDate" class="text-sm text-gray-500"></span>
-                <span id="autoUpdateStatus" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">● 自动更新</span>
-                <button onclick="exportToday()" class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">
-                    <i class="fas fa-download"></i>
+            <div class="flex items-center gap-3">
+                <button onclick="window.print()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm hover:bg-gray-200 transition">
+                    <i class="fas fa-print mr-1"></i>打印
+                </button>
+                <button onclick="resetAnalysis()" class="px-4 py-2 bg-primary text-white rounded-xl text-sm hover:bg-primary-light transition">
+                    <i class="fas fa-redo mr-1"></i>重新分析
                 </button>
             </div>
         </div>
     </header>
 
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <!-- 板块概览 -->
-        <section class="card bg-white rounded-3xl shadow-card p-6 fade-in">
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="font-bold text-gray-800 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-layer-group text-white text-sm"></i>
+        <!-- 股票输入 -->
+        <section class="bg-white rounded-3xl shadow-lg p-6">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-search text-white text-sm"></i>
+                </div>
+                输入股票代码
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">股票代码</label>
+                    <input type="text" id="stockCode" placeholder="例如: 600519"
+                        class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-lg font-medium">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">股票名称</label>
+                    <input type="text" id="stockName" placeholder="例如: 贵州茅台"
+                        class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-lg font-medium">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">所属板块</label>
+                    <input type="text" id="stockSector" placeholder="例如: 白酒"
+                        class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-lg font-medium">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="text-xs text-gray-500 mb-1 block">流通市值（亿）</label>
+                <input type="number" id="marketCap" placeholder="例如: 2000"
+                    class="w-48 px-4 py-3 bg-gray-50 border-0 rounded-xl text-lg font-medium" oninput="updateMarketCapScore()">
+            </div>
+        </section>
+
+        <!-- 市场环境 -->
+        <section class="bg-white rounded-3xl shadow-lg p-6">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white text-sm"></i>
+                </div>
+                市场环境评估
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-gray-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">大盘趋势</div>
+                    <select id="marketTrend" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2" onchange="calculateMarketScore()">
+                        <option value="2">强势 +2</option>
+                        <option value="1">中性 +1</option>
+                        <option value="0">弱势 +0</option>
+                    </select>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">市场情绪</div>
+                    <select id="marketSentiment" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2" onchange="calculateMarketScore()">
+                        <option value="2">乐观 +2</option>
+                        <option value="1">中性 +1</option>
+                        <option value="0">悲观 +0</option>
+                    </select>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">板块确认</div>
+                    <select id="sectorConfirm" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2" onchange="calculateMarketScore()">
+                        <option value="2">正式确认 +2</option>
+                        <option value="1">预确认 +1</option>
+                        <option value="0">未确认 +0</option>
+                    </select>
+                </div>
+                <div class="text-center p-4 bg-gray-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">市场评分</div>
+                    <div id="marketScoreDisplay" class="text-2xl font-bold text-primary">0/6</div>
+                </div>
+            </div>
+            <div id="marketAdvice" class="mt-4 p-4 rounded-xl bg-gray-50 text-center hidden">
+                <span id="marketAdviceText" class="font-medium"></span>
+            </div>
+        </section>
+
+        <!-- 六维度评分 -->
+        <section class="bg-white rounded-3xl shadow-lg p-6">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-violet-400 to-purple-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-th-large text-white text-sm"></i>
+                </div>
+                六维度价值评估
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- ① RPS相对强度 -->
+                <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">① RPS 相对强度</span>
+                        <span id="rpsScore" class="text-xl font-bold text-primary">3</span>
                     </div>
-                    板块概览
-                </h2>
-                <div class="flex items-center gap-2">
-                    <span id="dataTime" class="text-xs text-gray-400"></span>
-                    <button onclick="refreshSectorData()" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">
-                        <i class="fas fa-sync-alt text-sm"></i>
-                    </button>
+                    <input type="range" id="rpsSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('rps')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>后50%</span><span>前30%</span><span>前10%</span>
+                    </div>
+                </div>
+
+                <!-- ② 龙头地位 -->
+                <div class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">② 龙头地位</span>
+                        <span id="dragonScore" class="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <input type="range" id="dragonSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('dragon')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>跟风票</span><span>前排</span><span>龙头</span>
+                    </div>
+                </div>
+
+                <!-- ③ 量价结构 -->
+                <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">③ 量价结构</span>
+                        <span id="volumeScore" class="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <input type="range" id="volumeSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('volume')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>量价背离</span><span>量价配合</span><span>量价齐升</span>
+                    </div>
+                </div>
+
+                <!-- ④ 市值适配 -->
+                <div class="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">④ 市值适配</span>
+                        <span id="capScore" class="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <input type="range" id="capSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('cap')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>偏小/偏大</span><span>适中</span><span>最优区间</span>
+                    </div>
+                </div>
+
+                <!-- ⑤ 催化强度 -->
+                <div class="p-4 bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">⑤ 催化强度</span>
+                        <span id="catalystScore" class="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <input type="range" id="catalystSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('catalyst')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>无催化</span><span>弱催化</span><span>强催化</span>
+                    </div>
+                </div>
+
+                <!-- ⑥ 筹码结构 -->
+                <div class="p-4 bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-700">⑥ 筹码结构</span>
+                        <span id="chipsScore" class="text-xl font-bold text-primary">3</span>
+                    </div>
+                    <input type="range" id="chipsSlider" min="1" max="5" value="3" class="w-full slider" oninput="updateScore('chips')">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>套牢盘重</span><span>结构一般</span><span>筹码干净</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- 板块数据展示区 -->
-            <div id="sectorData" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- 资金流入 -->
-                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fas fa-arrow-down text-blue-500"></i>
-                        <span class="text-sm font-semibold text-gray-700">资金流入排行</span>
-                    </div>
-                    <div id="fundFlowList" class="space-y-2">
-                        <div class="sector-item p-2 rounded-xl flex justify-between items-center cursor-pointer">
-                            <span class="text-sm text-gray-600">暂无数据</span>
-                            <span class="text-xs text-gray-400">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 涨幅排行 -->
-                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fas fa-chart-line text-green-500"></i>
-                        <span class="text-sm font-semibold text-gray-700">涨幅排行</span>
-                    </div>
-                    <div id="riseRankList" class="space-y-2">
-                        <div class="sector-item p-2 rounded-xl flex justify-between items-center cursor-pointer">
-                            <span class="text-sm text-gray-600">暂无数据</span>
-                            <span class="text-xs text-gray-400">--</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 板块龙头 -->
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fas fa-crown text-purple-500"></i>
-                        <span class="text-sm font-semibold text-gray-700">板块龙头</span>
-                    </div>
-                    <div id="sectorLeaders" class="space-y-2">
-                        <div class="sector-item p-2 rounded-xl cursor-pointer">
-                            <div class="text-sm text-gray-600">暂无数据</div>
-                            <div class="text-xs text-gray-400">--</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 涨停追踪 -->
-                <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fas fa-bolt text-amber-500"></i>
-                        <span class="text-sm font-semibold text-gray-700">涨停追踪</span>
-                    </div>
-                    <div id="limitUpStats" class="space-y-2">
-                        <div class="sector-item p-2 rounded-xl flex justify-between items-center cursor-pointer">
-                            <span class="text-sm text-gray-600">暂无数据</span>
-                            <span class="text-xs text-gray-400">--</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 板块粘贴区 -->
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-gray-500">粘贴 autoclaw 板块数据自动解析</span>
-                </div>
-                <textarea id="sectorInput" rows="3"
-                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm resize-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="粘贴板块数据，例如：
-资金流入: AI应用 +12.3亿, 半导体 +8.7亿
-涨幅排行: 低空经济 +5.2%, AI应用 +4.8%
-龙头: AI应用-科大讯飞, 半导体-中芯国际
-涨停: 5只"></textarea>
-                <div class="flex justify-end mt-2">
-                    <button onclick="parseSectorData()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-light transition">
-                        <i class="fas fa-magic mr-1"></i>解析板块数据
-                    </button>
+            <!-- 风险修正 -->
+            <div class="mt-6 p-4 bg-red-50 rounded-2xl">
+                <h4 class="font-medium text-gray-700 mb-3">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>风险修正（存在以下情况降级）
+                </h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label class="flex items-center gap-2 p-2 bg-white rounded-xl cursor-pointer">
+                        <input type="checkbox" id="risk1" class="w-4 h-4 text-red-500 rounded" onchange="applyRiskPenalty()">
+                        <span class="text-sm">一字板</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-white rounded-xl cursor-pointer">
+                        <input type="checkbox" id="risk2" class="w-4 h-4 text-red-500 rounded" onchange="applyRiskPenalty()">
+                        <span class="text-sm">高开冲板</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-white rounded-xl cursor-pointer">
+                        <input type="checkbox" id="risk3" class="w-4 h-4 text-red-500 rounded" onchange="applyRiskPenalty()">
+                        <span class="text-sm">封单异常</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-white rounded-xl cursor-pointer">
+                        <input type="checkbox" id="risk4" class="w-4 h-4 text-red-500 rounded" onchange="applyRiskPenalty()">
+                        <span class="text-sm">振幅过大</span>
+                    </label>
                 </div>
             </div>
         </section>
 
-        <!-- 今日决策 + 风格匹配 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 今日决策 -->
-            <div class="lg:col-span-2 card bg-white rounded-3xl shadow-card p-6 fade-in">
-                <div class="flex items-center justify-between mb-5">
-                    <h2 class="font-bold text-gray-800 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-rocket text-white text-sm"></i>
-                        </div>
-                        今日决策
-                        <span id="visitorBadge" class="hidden ml-2 px-2 py-0.5 text-xs bg-primary text-white rounded-full"></span>
-                    </h2>
-                </div>
-
-                <!-- 市场状态 -->
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    <div class="bg-gray-50 rounded-2xl p-4 text-center">
-                        <div class="text-xs text-gray-500 mb-2">趋势</div>
-                        <select id="trendScore" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2 px-3" onchange="updateMarketDecision()">
-                            <option value="">--</option>
-                            <option value="2">2分 强</option>
-                            <option value="1">1分 中</option>
-                            <option value="0">0分 弱</option>
-                        </select>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-4 text-center">
-                        <div class="text-xs text-gray-500 mb-2">流动性</div>
-                        <select id="liquidityScore" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2 px-3" onchange="updateMarketDecision()">
-                            <option value="">--</option>
-                            <option value="2">2分 活跃</option>
-                            <option value="1">1分 中性</option>
-                            <option value="0">0分 萎缩</option>
-                        </select>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-4 text-center">
-                        <div class="text-xs text-gray-500 mb-2">情绪</div>
-                        <select id="sentimentScore" class="w-full text-center font-bold bg-white border-0 rounded-xl py-2 px-3" onchange="updateMarketDecision()">
-                            <option value="">--</option>
-                            <option value="2">2分 好</option>
-                            <option value="1">1分 中</option>
-                            <option value="0">0分 差</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 核心结论 -->
-                <div id="marketConclusion" class="p-6 rounded-2xl border-2 border-gray-200 text-center bg-gray-50/50">
-                    <div class="text-5xl mb-3">⏳</div>
-                    <div class="text-xl font-bold text-gray-500">等待评分...</div>
-                    <div class="text-sm text-gray-400 mt-1">选择各维度得分获取决策建议</div>
-                </div>
-            </div>
-
-            <!-- 风格匹配 -->
-            <div class="card bg-white rounded-3xl shadow-card p-6 fade-in">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-balance-scale text-primary"></i>
-                    风格匹配
-                </h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">中证1000 涨幅%</label>
-                        <input type="number" id="zz1000Change" step="0.01" placeholder="0.0"
-                            class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="updateStyleMatch()">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">沪深300 涨幅%</label>
-                        <input type="number" id="hs300Change" step="0.01" placeholder="0.0"
-                            class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="updateStyleMatch()">
-                    </div>
-                </div>
-                <div id="styleMatchResult" class="mt-4 p-3 rounded-xl bg-gray-50 text-center">
-                    <span class="text-sm text-gray-500">输入涨跌幅自动判断</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 打赏 + 仓位 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 打赏区域 -->
-            <div class="card bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 rounded-3xl shadow-card p-6 text-center fade-in">
-                <div class="text-4xl mb-3">☕</div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">觉得好用？请作者喝杯咖啡 ☕</h3>
-                <p class="text-sm text-gray-600 mb-4">您的支持是我持续更新的动力</p>
-                <button onclick="showDonateModal()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition">
-                    <i class="fas fa-heart mr-2"></i>打赏支持
-                </button>
-            </div>
-
-            <!-- 仓位计算 -->
-            <div class="lg:col-span-2 card bg-white rounded-3xl shadow-card p-6 fade-in">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-calculator text-white text-sm"></i>
-                    </div>
-                    仓位计算
-                </h3>
-                <div class="grid grid-cols-4 gap-3 mb-4">
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">账户(万)</label>
-                        <input type="number" id="account" placeholder="10" value="10"
-                            class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="calcPosition()">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">风险%</label>
-                        <input type="number" id="riskPct" value="1" step="0.1"
-                            class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="calcPosition()">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">止损%</label>
-                        <input type="number" id="stopLossPct" placeholder="5" step="0.1"
-                            class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="calcPosition()">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">ATR</label>
-                        <input type="number" id="atrValue" placeholder="0.3" step="0.01"
-                            class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl text-center font-medium" oninput="calcPosition()">
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
-                        <div class="text-xs text-gray-500 mb-1">单票仓位</div>
-                        <div id="positionAmt" class="text-2xl font-bold text-primary">--</div>
-                    </div>
-                    <div class="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl">
-                        <div class="text-xs text-gray-500 mb-1">允许亏损</div>
-                        <div id="maxLoss" class="text-2xl font-bold text-success">--</div>
-                    </div>
-                    <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl">
-                        <div class="text-xs text-gray-500 mb-1">ATR止损</div>
-                        <div id="atrStop" class="text-xl font-bold text-warning">--</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- autoclaw + 操作记录 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- autoclaw 粘贴区 -->
-            <div class="card bg-white rounded-3xl shadow-card p-6 fade-in">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-gradient-to-br from-violet-400 to-purple-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-paste text-white text-sm"></i>
-                        </div>
-                        autoclaw 结论
-                    </h3>
-                    <button onclick="parseClipboard()" class="text-sm text-primary hover:underline font-medium">
-                        <i class="fas fa-magic mr-1"></i>智能解析
-                    </button>
-                </div>
-                <textarea id="autoclawInput" rows="4"
-                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm resize-none"
-                    placeholder="粘贴 autoclaw 扫描结论...
-
-例如：
-- 沪深300: MA20上方，趋势+1
-- 两市成交: 5日/120日 = 1.15"></textarea>
-                <div class="flex gap-2 mt-3">
-                    <button onclick="quickFillMarket()" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-xl hover:bg-gray-200 transition">
-                        <i class="fas fa-bolt mr-1"></i>快速填充
-                    </button>
-                    <button onclick="clearInput()" class="px-4 py-2 text-gray-400 text-sm hover:text-gray-600 transition">
-                        清空
-                    </button>
-                </div>
-            </div>
-
-            <!-- 操作记录 -->
-            <div class="card bg-white rounded-3xl shadow-card p-6 fade-in">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <div class="w-8 h-8 bg-gradient-to-br from-rose-400 to-pink-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-list text-white text-sm"></i>
-                        </div>
-                        今日操作
-                    </h3>
-                    <button onclick="showAddTrade()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-light transition">
-                        <i class="fas fa-plus mr-1"></i>添加
-                    </button>
-                </div>
-                <div id="tradeList" class="space-y-2">
-                    <div id="emptyTrades" class="text-center py-8 text-gray-400">
-                        <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
-                        <p>暂无操作记录</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 执行清单 -->
-        <section class="card bg-white rounded-3xl shadow-card p-6 fade-in">
-            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center">
+        <!-- 分析结果 -->
+        <section id="resultSection" class="bg-white rounded-3xl shadow-lg p-6 result-fade hidden">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-rose-400 to-pink-500 rounded-lg flex items-center justify-center">
                     <i class="fas fa-clipboard-check text-white text-sm"></i>
                 </div>
-                今日执行清单
-            </h3>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <button onclick="toggleCheck('pm')" id="check-pm" class="check-btn p-4 rounded-2xl border-2 border-gray-200 text-center transition hover:border-gray-300">
-                    <div class="text-2xl mb-2">📸</div>
-                    <div class="text-sm font-medium">15:05 快照</div>
-                </button>
-                <button onclick="toggleCheck('evening')" id="check-evening" class="check-btn p-4 rounded-2xl border-2 border-gray-200 text-center transition hover:border-gray-300">
-                    <div class="text-2xl mb-2">🌙</div>
-                    <div class="text-sm font-medium">晚间复盘</div>
-                </button>
-                <button onclick="toggleCheck('nextday')" id="check-nextday" class="check-btn p-4 rounded-2xl border-2 border-gray-200 text-center transition hover:border-gray-300">
-                    <div class="text-2xl mb-2">☀️</div>
-                    <div class="text-sm font-medium">次日盘中</div>
-                </button>
-            </div>
-            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
-                <span class="text-sm text-gray-600 font-medium">完成进度</span>
-                <div class="flex items-center gap-3">
-                    <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div id="checkProgress" class="h-full bg-primary rounded-full transition-all" style="width: 0%"></div>
+                分析结论
+            </h2>
+
+            <!-- 核心评分 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">六维总分</div>
+                    <div id="totalScore" class="text-5xl font-bold text-gray-800">18</div>
+                    <div class="text-sm text-gray-400">/ 30分</div>
+                </div>
+                <div class="text-center p-6 rounded-2xl">
+                    <div id="gradeBox" class="grade-b text-center p-6 rounded-2xl">
+                        <div class="text-xs text-white/80 mb-1">综合评级</div>
+                        <div id="gradeDisplay" class="text-5xl font-bold text-white">B</div>
                     </div>
-                    <span id="checkProgressText" class="text-sm font-bold text-primary">0%</span>
+                </div>
+                <div class="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">市场环境</div>
+                    <div id="marketGrade" class="text-2xl font-bold text-gray-800">中性</div>
+                    <div class="text-sm text-gray-400 mt-1">建议仓位：≤40%</div>
+                </div>
+            </div>
+
+            <!-- 操作建议 -->
+            <div id="adviceBox" class="p-6 rounded-2xl text-center mb-6">
+                <div id="adviceText" class="text-xl font-bold text-white">可试仓，等买点确认</div>
+            </div>
+
+            <!-- 维度明细 -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="p-3 bg-blue-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">① RPS</div>
+                    <div id="rpsResult" class="text-lg font-bold text-blue-600">3分</div>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">② 龙头</div>
+                    <div id="dragonResult" class="text-lg font-bold text-amber-600">3分</div>
+                </div>
+                <div class="p-3 bg-green-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">③ 量价</div>
+                    <div id="volumeResult" class="text-lg font-bold text-green-600">3分</div>
+                </div>
+                <div class="p-3 bg-pink-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">④ 市值</div>
+                    <div id="capResult" class="text-lg font-bold text-pink-600">3分</div>
+                </div>
+                <div class="p-3 bg-violet-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">⑤ 催化</div>
+                    <div id="catalystResult" class="text-lg font-bold text-violet-600">3分</div>
+                </div>
+                <div class="p-3 bg-cyan-50 rounded-xl text-center">
+                    <div class="text-xs text-gray-500">⑥ 筹码</div>
+                    <div id="chipsResult" class="text-lg font-bold text-cyan-600">3分</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 仓位计算 -->
+        <section id="positionSection" class="bg-white rounded-3xl shadow-lg p-6 result-fade hidden">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calculator text-white text-sm"></i>
+                </div>
+                仓位计算
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">账户金额（万）</label>
+                    <input type="number" id="account" placeholder="10" value="10" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl" oninput="calcPosition()">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">单笔风险%</label>
+                    <input type="number" id="riskPct" value="1" step="0.1" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl" oninput="calcPosition()">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">止损幅度%</label>
+                    <input type="number" id="stopLoss" placeholder="5" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl" oninput="calcPosition()">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block">ATR</label>
+                    <input type="number" id="atr" placeholder="0.3" class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl" oninput="calcPosition()">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center p-4 bg-blue-50 rounded-2xl">
+                    <div class="text-xs text-gray-500">建议仓位</div>
+                    <div id="positionAmt" class="text-2xl font-bold text-primary">--</div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-2xl">
+                    <div class="text-xs text-gray-500">允许亏损</div>
+                    <div id="maxLoss" class="text-2xl font-bold text-success">--</div>
+                </div>
+                <div class="text-center p-4 bg-amber-50 rounded-2xl">
+                    <div class="text-xs text-gray-500">ATR止损</div>
+                    <div id="atrStop" class="text-xl font-bold text-warning">--</div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Modals -->
-    <!-- 添加交易弹窗 -->
-    <div id="tradeModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-lg text-gray-800">添加操作</h3>
-                <button onclick="closeTradeModal()" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-5 space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">操作类型</label>
-                        <select id="tradeType" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                            <option value="buy">🟢 买入</option>
-                            <option value="sell">🔴 卖出</option>
-                            <option value="stop">🟡 止损</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">时间</label>
-                        <input type="time" id="tradeTime" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">股票代码</label>
-                        <input type="text" id="tradeCode" placeholder="600519" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">价格</label>
-                        <input type="number" id="tradePrice" step="0.01" placeholder="1850" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">数量(手)</label>
-                        <input type="number" id="tradeQty" placeholder="1" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-500 mb-1 block">止损价(选填)</label>
-                        <input type="number" id="tradeStop" step="0.01" placeholder="1800" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500 mb-1 block">备注</label>
-                    <input type="text" id="tradeNote" placeholder="买点类型/原因" class="w-full px-3 py-3 bg-gray-50 border-0 rounded-xl">
-                </div>
-            </div>
-            <div class="p-5 bg-gray-50 flex justify-end gap-2">
-                <button onclick="closeTradeModal()" class="px-5 py-2.5 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition">取消</button>
-                <button onclick="addTrade()" class="px-5 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary-light transition">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 昵称弹窗 -->
-    <div id="nicknameModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-            <div class="p-8 text-center">
-                <div class="text-5xl mb-4">👋</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">欢迎使用 BBDA</h3>
-                <p class="text-sm text-gray-500 mb-6">请告诉我你的昵称</p>
-                <input type="text" id="nicknameInput" placeholder="输入昵称" maxlength="20"
-                    class="w-full px-5 py-4 border-2 border-primary/20 rounded-2xl text-center text-lg focus:border-primary">
-                <button onclick="saveNickname()" class="w-full mt-4 px-5 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-light transition">
-                    开始使用
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 打赏弹窗 -->
-    <div id="donateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                <h3 class="font-bold text-lg text-gray-800">☕ 打赏作者</h3>
-                <button onclick="closeDonateModal()" class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-6 text-center">
-                <img src="donate.jpg" alt="微信收款码" class="w-64 h-64 mx-auto rounded-2xl shadow-lg">
-                <p class="text-sm text-gray-500 mt-4">识别上方二维码<br>金额随意，感谢支持 🙏</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-gray-800/90 backdrop-blur text-white rounded-full shadow-xl transform transition-all duration-300 -translate-y-20 opacity-0">
-        <span id="toastMsg"></span>
-    </div>
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-400 text-sm">
+        BBDA 股票分析工具 · 六维度价值评估系统 v4.2
+    </footer>
 
     <script>
-        // ========== State ==========
-        let todayKey = new Date().toISOString().split('T')[0];
-        let marketDecision = { total: 0, status: '', positionLimit: 0, strategy: '' };
-        let styleAdjustment = 1;
-        let trades = [];
-        let checks = { pm: false, evening: false, nextday: false };
+        // Score state
+        let scores = { rps: 3, dragon: 3, volume: 3, cap: 3, catalyst: 3, chips: 3 };
+        let riskPenalty = 0;
+        let marketTotal = 0;
 
-        // ========== Init ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('todayDate').textContent = new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' });
-            document.getElementById('dataTime').textContent = '数据更新时间: --';
-            document.getElementById('tradeTime').value = new Date().toTimeString().slice(0, 5);
-            loadData();
-            updateUI();
-            checkNickname();
-            loadSectorDataFromServer();
-        });
+        // Update individual score
+        function updateScore(dim) {
+            const slider = document.getElementById(dim + 'Slider');
+            const display = document.getElementById(dim + 'Score');
+            scores[dim] = parseInt(slider.value);
+            display.textContent = scores[dim];
+            showResult();
+        }
 
-        // ========== Nickname ==========
-        function checkNickname() {
-            const savedNickname = localStorage.getItem('bbda_nickname');
-            if (savedNickname) {
-                document.getElementById('visitorBadge').textContent = savedNickname;
-                document.getElementById('visitorBadge').classList.remove('hidden');
+        // Update market cap score automatically
+        function updateMarketCapScore() {
+            const cap = parseFloat(document.getElementById('marketCap').value) || 0;
+            let capScore;
+            if (cap >= 50 && cap <= 300) capScore = 5;
+            else if (cap > 300 && cap <= 500) capScore = 4;
+            else if (cap > 20 && cap < 50) capScore = 3;
+            else if (cap > 500) capScore = 2;
+            else capScore = 1;
+
+            scores.cap = capScore;
+            document.getElementById('capSlider').value = capScore;
+            document.getElementById('capScore').textContent = capScore;
+            showResult();
+        }
+
+        // Calculate market score
+        function calculateMarketScore() {
+            const trend = parseInt(document.getElementById('marketTrend').value) || 0;
+            const sentiment = parseInt(document.getElementById('marketSentiment').value) || 0;
+            const confirm = parseInt(document.getElementById('sectorConfirm').value) || 0;
+            marketTotal = trend + sentiment + confirm;
+
+            document.getElementById('marketScoreDisplay').textContent = marketTotal + '/6';
+
+            const advice = document.getElementById('marketAdvice');
+            const adviceText = document.getElementById('marketAdviceText');
+
+            if (marketTotal <= 2) {
+                adviceText.textContent = '市场偏弱，建议观望或小仓试探';
+                advice.className = 'mt-4 p-4 rounded-xl bg-yellow-50 text-center';
+            } else if (marketTotal <= 4) {
+                adviceText.textContent = '市场中性，可选择性参与核心标的';
+                advice.className = 'mt-4 p-4 rounded-xl bg-blue-50 text-center';
             } else {
-                document.getElementById('nicknameModal').classList.remove('hidden');
-                document.getElementById('nicknameModal').classList.add('flex');
-                document.getElementById('nicknameInput').focus();
+                adviceText.textContent = '市场强势，可积极布局主升浪标的';
+                advice.className = 'mt-4 p-4 rounded-xl bg-green-50 text-center';
             }
+            advice.classList.remove('hidden');
+
+            showResult();
         }
 
-        function saveNickname() {
-            const nickname = document.getElementById('nicknameInput').value.trim();
-            if (nickname) {
-                localStorage.setItem('bbda_nickname', nickname);
-                document.getElementById('visitorBadge').textContent = nickname;
-                document.getElementById('visitorBadge').classList.remove('hidden');
-                closeNicknameModal();
-                showToast(`欢迎 ${nickname}！`, 'success');
-            }
+        // Apply risk penalty
+        function applyRiskPenalty() {
+            const risks = [
+                document.getElementById('risk1').checked,
+                document.getElementById('risk2').checked,
+                document.getElementById('risk3').checked,
+                document.getElementById('risk4').checked
+            ];
+
+            const highRisk = risks[0] || risks[1];
+            const mediumRisk = risks[2] || risks[3];
+
+            if (highRisk) riskPenalty = 30;
+            else if (mediumRisk) riskPenalty = 3;
+            else riskPenalty = 0;
+
+            showResult();
         }
 
-        function closeNicknameModal() {
-            document.getElementById('nicknameModal').classList.add('hidden');
-            document.getElementById('nicknameModal').classList.remove('flex');
-        }
-
-        // ========== Donation ==========
-        function showDonateModal() {
-            document.getElementById('donateModal').classList.remove('hidden');
-            document.getElementById('donateModal').classList.add('flex');
-        }
-
-        function closeDonateModal() {
-            document.getElementById('donateModal').classList.add('hidden');
-            document.getElementById('donateModal').classList.remove('flex');
-        }
-
-        // ========== Sector Data ==========
-        function loadSectorData() {
-            const saved = localStorage.getItem('sector_data');
-            if (saved) {
-                const data = JSON.parse(saved);
-                renderSectorData(data);
-            }
-        }
-
-        async function loadSectorDataFromServer() {
-            try {
-                const response = await fetch('data/sector.json?t=' + Date.now());
-                if (response.ok) {
-                    const data = await response.json();
-                    renderSectorData(data);
-                    document.getElementById('dataTime').textContent = `数据更新: ${data.update_time || '--'}`;
-                    if (data.indices) autoFillMarketFromIndices(data.indices);
-                    document.getElementById('autoUpdateStatus').className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-600';
-                    document.getElementById('autoUpdateStatus').textContent = '● 自动更新';
-                }
-            } catch (e) {
-                const saved = localStorage.getItem('sector_data');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    renderSectorData(data);
-                }
-                document.getElementById('autoUpdateStatus').className = 'text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-600';
-                document.getElementById('autoUpdateStatus').textContent = '○ 本地数据';
-            }
-        }
-
-        function autoFillMarketFromIndices(indices) {
-            const hs300 = indices['sh000300'];
-            const zz1000 = indices['sh000852'];
-            if (hs300 && hs300.change !== undefined) {
-                document.getElementById('liquidityScore').value = hs300.change > 0.5 ? '2' : hs300.change < -0.5 ? '0' : '1';
-                document.getElementById('trendScore').value = hs300.change > 0.3 ? '2' : hs300.change < -0.3 ? '0' : '1';
-                if (zz1000 && hs300) {
-                    document.getElementById('zz1000Change').value = zz1000.change || 0;
-                    document.getElementById('hs300Change').value = hs300.change || 0;
-                    updateStyleMatch();
-                }
-                updateMarketDecision();
-            }
-        }
-
-        function parseSectorData() {
-            const input = document.getElementById('sectorInput').value;
-            if (!input.trim()) {
-                showToast('请先粘贴板块数据', 'warning');
+        // Show analysis result
+        function showResult() {
+            const code = document.getElementById('stockCode').value.trim();
+            if (!code) {
+                document.getElementById('resultSection').classList.add('hidden');
+                document.getElementById('positionSection').classList.add('hidden');
                 return;
             }
 
-            const data = {
-                fundFlow: [],
-                riseRank: [],
-                leaders: [],
-                limitUp: { total: 0, strong: 0, normal: 0 }
-            };
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('positionSection').classList.remove('hidden');
 
-            // 解析资金流入
-            const fundMatch = input.match(/资金流入[:：]?(.+?)(?=涨幅|$)/i);
-            if (fundMatch) {
-                const items = fundMatch[1].match(/([^\s,，]+(?:\s*\+\s*[\d.]+\s*(?:亿|万)))/g);
-                if (items) {
-                    items.slice(0, 5).forEach(item => {
-                        const nameMatch = item.match(/([^\+\s]+)/);
-                        const valueMatch = item.match(/\+\s*([\d.]+)\s*(亿|万)/);
-                        if (nameMatch && valueMatch) {
-                            data.fundFlow.push({ name: nameMatch[1].trim(), value: valueMatch[1] + valueMatch[2] });
-                        }
-                    });
-                }
-            }
+            // Calculate total
+            let baseTotal = scores.rps + scores.dragon + scores.volume + scores.cap + scores.catalyst + scores.chips;
+            let finalTotal = baseTotal;
+            let grade, advice, gradeClass, adviceClass;
 
-            // 解析涨幅排行
-            const riseMatch = input.match(/涨幅[排行]*[:：]?(.+?)(?=龙头|涨停|$)/i);
-            if (riseMatch) {
-                const items = riseMatch[1].match(/([^\s,，]+(?:\s*[+-]\s*[\d.]+\s*%?))/g);
-                if (items) {
-                    items.slice(0, 5).forEach(item => {
-                        const nameMatch = item.match(/([^\+\-]+)/);
-                        const valueMatch = item.match(/([+-]?\s*[\d.]+)\s*%?/);
-                        if (nameMatch && valueMatch) {
-                            data.riseRank.push({ name: nameMatch[1].trim(), change: valueMatch[1].trim() });
-                        }
-                    });
-                }
-            }
-
-            // 解析龙头
-            const leaderMatch = input.match(/龙头[:：]?(.+?)(?=涨停|$)/i);
-            if (leaderMatch) {
-                const items = leaderMatch[1].match(/([^\s,，-]+)(?:-|：|:)([^-]+)/g);
-                if (items) {
-                    items.slice(0, 4).forEach(item => {
-                        const parts = item.split(/[-:：]/);
-                        if (parts.length >= 2) {
-                            data.leaders.push({ sector: parts[0].trim(), stock: parts[1].trim() });
-                        }
-                    });
-                }
-            }
-
-            // 解析涨停
-            const limitMatch = input.match(/涨停[:：]?\s*(\d+)\s*只/g);
-            if (limitMatch) {
-                data.limitUp.total = parseInt(limitMatch[0].match(/\d+/)[0]);
-                data.limitUp.strong = Math.floor(data.limitUp.total * 0.4);
-                data.limitUp.normal = data.limitUp.total - data.limitUp.strong;
-            }
-
-            data.updateTime = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-
-            localStorage.setItem('sector_data', JSON.stringify(data));
-            renderSectorData(data);
-            showToast('板块数据已更新', 'success');
-        }
-
-        function renderSectorData(data) {
-            document.getElementById('dataTime').textContent = `数据更新时间: ${data.updateTime || '--'}`;
-
-            // 资金流入
-            const fundHtml = data.fundFlow.length > 0 ?
-                data.fundFlow.map(f => `
-                    <div class="sector-item p-2 rounded-xl flex justify-between items-center cursor-pointer">
-                        <span class="text-sm text-gray-700 font-medium">${f.name}</span>
-                        <span class="text-sm text-blue-500 font-bold">${f.value}</span>
-                    </div>
-                `).join('') :
-                '<div class="sector-item p-2 rounded-xl text-center text-sm text-gray-400">暂无数据</div>';
-            document.getElementById('fundFlowList').innerHTML = fundHtml;
-
-            // 涨幅排行
-            const riseHtml = data.riseRank.length > 0 ?
-                data.riseRank.map(r => `
-                    <div class="sector-item p-2 rounded-xl flex justify-between items-center cursor-pointer">
-                        <span class="text-sm text-gray-700 font-medium">${r.name}</span>
-                        <span class="text-sm ${parseFloat(r.change) > 0 ? 'text-green-500' : 'text-red-500'} font-bold">${r.change}%</span>
-                    </div>
-                `).join('') :
-                '<div class="sector-item p-2 rounded-xl text-center text-sm text-gray-400">暂无数据</div>';
-            document.getElementById('riseRankList').innerHTML = riseHtml;
-
-            // 龙头
-            const leaderHtml = data.leaders.length > 0 ?
-                data.leaders.map(l => `
-                    <div class="sector-item p-2 rounded-xl cursor-pointer">
-                        <div class="text-sm text-purple-600 font-medium">${l.sector}</div>
-                        <div class="text-xs text-gray-500">${l.stock}</div>
-                    </div>
-                `).join('') :
-                '<div class="sector-item p-2 rounded-xl text-center text-sm text-gray-400">暂无数据</div>';
-            document.getElementById('sectorLeaders').innerHTML = leaderHtml;
-
-            // 涨停
-            const limitHtml = data.limitUp.total > 0 ? `
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-amber-500">${data.limitUp.total}</div>
-                    <div class="text-xs text-gray-500">涨停总数</div>
-                </div>
-                <div class="flex justify-around mt-2 pt-2 border-t border-amber-100">
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-green-500">${data.limitUp.strong}</div>
-                        <div class="text-xs text-gray-400">强势</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-lg font-bold text-gray-500">${data.limitUp.normal}</div>
-                        <div class="text-xs text-gray-400">普通</div>
-                    </div>
-                </div>
-            ` : '<div class="sector-item p-2 rounded-xl text-center text-sm text-gray-400">暂无数据</div>';
-            document.getElementById('limitUpStats').innerHTML = limitHtml;
-        }
-
-        function refreshSectorData() {
-            parseSectorData();
-        }
-
-        // ========== Market Decision ==========
-        function updateMarketDecision() {
-            const trend = parseInt(document.getElementById('trendScore').value) || 0;
-            const liquidity = parseInt(document.getElementById('liquidityScore').value) || 0;
-            const sentiment = parseInt(document.getElementById('sentimentScore').value) || 0;
-            const total = trend + liquidity + sentiment;
-            marketDecision.total = total;
-
-            const box = document.getElementById('marketConclusion');
-            let icon, status, limit, strategy, color, bgColor;
-
-            if (total <= 1) {
-                icon = '🚫'; status = 'Risk-Off 防守'; limit = '0%'; strategy = '空仓，不开新仓';
-                color = 'danger'; bgColor = 'bg-red-50 border-red-200';
-            } else if (total === 2) {
-                icon = '⚠️'; status = '弱中性'; limit = '≤20%'; strategy = '不开新主仓，极小试仓';
-                color = 'warning'; bgColor = 'bg-yellow-50 border-yellow-200';
-            } else if (total <= 4) {
-                icon = '🟡'; status = 'Neutral 中性'; limit = '≤40%'; strategy = '只做预确认板块龙头试仓';
-                color = 'warning'; bgColor = 'bg-yellow-50 border-yellow-200';
-            } else if (total === 5) {
-                icon = '🟢'; status = 'Risk-On 进攻'; limit = '≤70%'; strategy = '可做确认板块主升浪';
-                color = 'success'; bgColor = 'bg-green-50 border-green-200';
+            if (riskPenalty >= 30) {
+                finalTotal = 0;
+                grade = '❌';
+                advice = '不可交易：存在高风险因素';
+                gradeClass = 'grade-d';
+                adviceClass = 'bg-red-500';
             } else {
-                icon = '🔥'; status = '强进攻'; limit = '≤70%'; strategy = '只做核心龙头回踩，不追后排';
-                color = 'success'; bgColor = 'bg-green-50 border-green-200';
+                finalTotal = baseTotal - riskPenalty;
+
+                if (finalTotal >= 24) {
+                    grade = 'A';
+                    advice = '重点关注：主升浪候选，建议建仓';
+                    gradeClass = 'grade-a';
+                    adviceClass = 'bg-green-500';
+                } else if (finalTotal >= 19) {
+                    grade = 'B';
+                    advice = '可试探仓：等待回踩买点确认';
+                    gradeClass = 'grade-b';
+                    adviceClass = 'bg-blue-500';
+                } else if (finalTotal >= 14) {
+                    grade = 'C';
+                    advice = '观望为主：不主动开仓';
+                    gradeClass = 'grade-c';
+                    adviceClass = 'bg-yellow-500';
+                } else {
+                    grade = 'D';
+                    advice = '回避：风险大于机会';
+                    gradeClass = 'grade-d';
+                    adviceClass = 'bg-red-500';
+                }
             }
 
-            marketDecision = { total, status, positionLimit: parseInt(limit) || 0, strategy };
-            const limitAdjusted = marketDecision.positionLimit * styleAdjustment;
-            const limitText = styleAdjustment < 1 ? `→ ${limitAdjusted}%（风格分化×0.5）` : `→ ${limitAdjusted}%`;
+            // Update display
+            document.getElementById('totalScore').textContent = riskPenalty >= 30 ? 'N/A' : finalTotal;
+            document.getElementById('gradeBox').className = gradeClass + ' text-center p-6 rounded-2xl';
+            document.getElementById('gradeDisplay').textContent = grade;
+            document.getElementById('adviceBox').className = 'p-6 rounded-2xl text-center mb-6 ' + adviceClass;
+            document.getElementById('adviceText').textContent = advice;
 
-            box.className = `p-6 rounded-2xl border-2 text-center ${bgColor} ${total === 5 ? 'pulse-green' : ''}`;
-            box.innerHTML = `
-                <div class="text-5xl mb-3">${icon}</div>
-                <div class="text-2xl font-bold text-${color}-600">${status}</div>
-                <div class="text-lg text-${color}-600 mt-2">${total} / 6 分</div>
-                <div class="text-sm text-gray-600 mt-2">仓位上限 ${limitText}</div>
-                <div class="text-sm text-gray-500 mt-1">${strategy}</div>
-            `;
+            // Market grade
+            let marketGrade, positionLimit;
+            if (marketTotal <= 2) {
+                marketGrade = '偏弱';
+                positionLimit = '≤20%';
+            } else if (marketTotal <= 4) {
+                marketGrade = '中性';
+                positionLimit = '≤40%';
+            } else {
+                marketGrade = '强势';
+                positionLimit = '≤70%';
+            }
+            document.getElementById('marketGrade').textContent = marketGrade;
+            document.getElementById('marketGrade').nextElementSibling.textContent = '建议仓位：' + positionLimit;
 
+            // Dimension results
+            document.getElementById('rpsResult').textContent = scores.rps + '分';
+            document.getElementById('dragonResult').textContent = scores.dragon + '分';
+            document.getElementById('volumeResult').textContent = scores.volume + '分';
+            document.getElementById('capResult').textContent = scores.cap + '分';
+            document.getElementById('catalystResult').textContent = scores.catalyst + '分';
+            document.getElementById('chipsResult').textContent = scores.chips + '分';
+
+            // Calculate position
             calcPosition();
         }
 
-        function updateStyleMatch() {
-            const zz1000 = parseFloat(document.getElementById('zz1000Change').value) || 0;
-            const hs300 = parseFloat(document.getElementById('hs300Change').value) || 0;
-            const diff = zz1000 - hs300;
-            const resultBox = document.getElementById('styleMatchResult');
-
-            if (Math.abs(diff) > 1) {
-                styleAdjustment = diff > 0 ? 1 : 0.5;
-                const isMatch = diff > 0;
-                resultBox.innerHTML = `
-                    <div class="text-2xl mb-1">${isMatch ? '🟢' : '🔴'}</div>
-                    <div class="text-sm font-medium ${isMatch ? 'text-green-600' : 'text-red-600'}">${isMatch ? '中小盘强势' : '二八分化'}</div>
-                    <div class="text-xs text-gray-500 mt-1">${isMatch ? '仓位维持原值' : '仓位上限×0.5'}</div>
-                `;
-                resultBox.className = `mt-4 p-3 rounded-xl text-center ${isMatch ? 'bg-green-50' : 'bg-red-50'}`;
-            } else {
-                styleAdjustment = 1;
-                resultBox.innerHTML = `
-                    <div class="text-2xl mb-1">🟡</div>
-                    <div class="text-sm font-medium text-yellow-600">无明显分化</div>
-                    <div class="text-xs text-gray-500 mt-1">仓位维持原值</div>
-                `;
-                resultBox.className = 'mt-4 p-3 rounded-xl bg-gray-50 text-center';
-            }
-
-            updateMarketDecision();
-        }
-
-        // ========== Position Calculator ==========
+        // Calculate position
         function calcPosition() {
             const account = parseFloat(document.getElementById('account').value) || 0;
             const riskPct = parseFloat(document.getElementById('riskPct').value) || 1;
-            const stopLossPct = parseFloat(document.getElementById('stopLossPct').value) || 0;
-            const atrValue = parseFloat(document.getElementById('atrValue').value) || 0;
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
+            const atr = parseFloat(document.getElementById('atr').value) || 0;
 
-            if (account > 0 && riskPct > 0 && stopLossPct > 0) {
+            if (account > 0 && riskPct > 0 && stopLoss > 0) {
                 const maxLoss = account * 10000 * (riskPct / 100);
-                const positionAmt = maxLoss / (stopLossPct / 100);
-                const atrStop = atrValue > 0 ? Math.max(stopLossPct, atrValue * 100 / 5) : stopLossPct;
+                const position = maxLoss / (stopLoss / 100);
+                const atrStop = atr > 0 ? Math.max(stopLoss, atr * 100 / 5) : stopLoss;
 
                 document.getElementById('maxLoss').textContent = maxLoss.toFixed(0);
-                document.getElementById('positionAmt').textContent = positionAmt.toFixed(0);
+                document.getElementById('positionAmt').textContent = position.toFixed(0);
                 document.getElementById('atrStop').textContent = atrStop.toFixed(1) + '%';
             }
         }
 
-        // ========== Quick Fill ==========
-        function quickFillMarket() {
-            const input = document.getElementById('autoclawInput').value.toLowerCase();
+        // Reset analysis
+        function resetAnalysis() {
+            document.getElementById('stockCode').value = '';
+            document.getElementById('stockName').value = '';
+            document.getElementById('stockSector').value = '';
+            document.getElementById('marketCap').value = '';
 
-            if (input.includes('ma20上方') || input.includes('站上ma20')) {
-                document.getElementById('trendScore').value = '2';
-            } else if (input.includes('ma20附近') || input.includes('震荡')) {
-                document.getElementById('trendScore').value = '1';
-            } else if (input.includes('ma20下方') || input.includes('跌破')) {
-                document.getElementById('trendScore').value = '0';
-            }
+            ['rps', 'dragon', 'volume', 'cap', 'catalyst', 'chips'].forEach(dim => {
+                scores[dim] = 3;
+                document.getElementById(dim + 'Slider').value = 3;
+                document.getElementById(dim + 'Score').textContent = 3;
+            });
 
-            if (input.includes('1.1') || input.includes('1.15') || input.includes('1.2')) {
-                document.getElementById('liquidityScore').value = '2';
-            } else if (input.includes('0.9') || input.includes('0.95')) {
-                document.getElementById('liquidityScore').value = '0';
-            } else if (input.includes('1.0') || input.includes('1.05')) {
-                document.getElementById('liquidityScore').value = '1';
-            }
+            document.querySelectorAll('[id^="risk"]').forEach(cb => cb.checked = false);
+            riskPenalty = 0;
 
-            if (input.includes('溢价') && !input.includes('负') && !input.includes('差')) {
-                document.getElementById('sentimentScore').value = '2';
-            } else if (input.includes('溢价') && (input.includes('负') || input.includes('差') || input.includes('高'))) {
-                document.getElementById('sentimentScore').value = '0';
-            } else {
-                document.getElementById('sentimentScore').value = '1';
-            }
+            document.getElementById('marketTrend').value = '1';
+            document.getElementById('marketSentiment').value = '1';
+            document.getElementById('sectorConfirm').value = '1';
+            calculateMarketScore();
 
-            const zzMatch = input.match(/中证.*?([+-]?[\d.]+)%/);
-            const hsMatch = input.match(/沪深.*?([+-]?[\d.]+)%/);
-            if (zzMatch) document.getElementById('zz1000Change').value = zzMatch[1];
-            if (hsMatch) document.getElementById('hs300Change').value = hsMatch[1];
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('positionSection').classList.add('hidden');
 
-            updateMarketDecision();
-            showToast('已自动解析指标', 'success');
-        }
-
-        function parseClipboard() {
-            if (navigator.clipboard && navigator.clipboard.readText) {
-                navigator.clipboard.readText().then(text => {
-                    document.getElementById('autoclawInput').value = text;
-                    quickFillMarket();
-                }).catch(() => {
-                    document.getElementById('autoclawInput').focus();
-                    showToast('请手动粘贴', 'warning');
-                });
-            } else {
-                document.getElementById('autoclawInput').focus();
-                showToast('请手动粘贴', 'warning');
-            }
-        }
-
-        function clearInput() {
-            document.getElementById('autoclawInput').value = '';
-        }
-
-        // ========== Trade Management ==========
-        function showAddTrade() {
-            document.getElementById('tradeModal').classList.remove('hidden');
-            document.getElementById('tradeModal').classList.add('flex');
-            document.getElementById('tradeCode').focus();
-        }
-
-        function closeTradeModal() {
-            document.getElementById('tradeModal').classList.add('hidden');
-            document.getElementById('tradeModal').classList.remove('flex');
-        }
-
-        function addTrade() {
-            const code = document.getElementById('tradeCode').value.trim();
-            const type = document.getElementById('tradeType').value;
-            const price = parseFloat(document.getElementById('tradePrice').value);
-            const qty = parseInt(document.getElementById('tradeQty').value) || 1;
-            const stop = parseFloat(document.getElementById('tradeStop').value) || 0;
-            const note = document.getElementById('tradeNote').value.trim();
-            const time = document.getElementById('tradeTime').value;
-
-            if (!code || !price) {
-                showToast('请填写股票代码和价格', 'warning');
-                return;
-            }
-
-            trades.push({ id: Date.now(), type, code, price, qty, stop, note, time, date: todayKey });
-            saveData();
-            renderTrades();
-            closeTradeModal();
-            showToast(`${type === 'buy' ? '买入' : type === 'sell' ? '卖出' : '止损'}记录已添加`, 'success');
-        }
-
-        function deleteTrade(id) {
-            trades = trades.filter(t => t.id !== id);
-            saveData();
-            renderTrades();
-            showToast('记录已删除', 'info');
-        }
-
-        function renderTrades() {
-            const container = document.getElementById('tradeList');
-            const empty = document.getElementById('emptyTrades');
-
-            if (trades.length === 0) {
-                empty.classList.remove('hidden');
-                container.innerHTML = '';
-                container.appendChild(empty);
-                return;
-            }
-
-            empty.classList.add('hidden');
-            container.innerHTML = trades.map(t => {
-                const typeIcon = t.type === 'buy' ? '🟢' : t.type === 'sell' ? '🔴' : '🟡';
-                const typeText = t.type === 'buy' ? '买入' : t.type === 'sell' ? '卖出' : '止损';
-                const amount = (t.price * t.qty * 100).toLocaleString();
-                return `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <div class="flex items-center gap-3">
-                            <span class="text-lg">${typeIcon}</span>
-                            <div>
-                                <div class="font-medium text-gray-800">${t.code}</div>
-                                <div class="text-xs text-gray-500">${t.time} · ${typeText} ${t.qty}手 @ ¥${t.price.toFixed(2)}</div>
-                                ${t.note ? `<div class="text-xs text-gray-400 mt-1">${t.note}</div>` : ''}
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            ${t.stop ? `<div class="text-xs text-danger font-medium">止损 ¥${t.stop}</div>` : ''}
-                            <div class="text-sm font-bold text-gray-700">¥${amount}</div>
-                            <button onclick="deleteTrade(${t.id})" class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 hover:text-danger hover:bg-red-50 transition">
-                                <i class="fas fa-times text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // ========== Checklist ==========
-        function toggleCheck(key) {
-            checks[key] = !checks[key];
-            const btn = document.getElementById('check-' + key);
-            if (checks[key]) {
-                btn.classList.remove('border-gray-200');
-                btn.classList.add('border-primary', 'bg-blue-50');
-            } else {
-                btn.classList.add('border-gray-200');
-                btn.classList.remove('border-primary', 'bg-blue-50');
-            }
-            updateCheckProgress();
-            saveData();
-        }
-
-        function updateCheckProgress() {
-            const total = 3;
-            const done = Object.values(checks).filter(Boolean).length;
-            const pct = Math.round((done / total) * 100);
-            document.getElementById('checkProgress').style.width = pct + '%';
-            document.getElementById('checkProgressText').textContent = pct + '%';
-        }
-
-        // ========== Storage ==========
-        function saveData() {
-            const data = {
-                date: todayKey,
-                market: {
-                    trend: document.getElementById('trendScore').value,
-                    liquidity: document.getElementById('liquidityScore').value,
-                    sentiment: document.getElementById('sentimentScore').value,
-                    zz1000: document.getElementById('zz1000Change').value,
-                    hs300: document.getElementById('hs300Change').value,
-                    decision: marketDecision
-                },
-                trades,
-                checks
-            };
-            localStorage.setItem('decision_' + todayKey, JSON.stringify(data));
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem('decision_' + todayKey);
-            if (saved) {
-                const data = JSON.parse(saved);
-                if (data.market) {
-                    document.getElementById('trendScore').value = data.market.trend || '';
-                    document.getElementById('liquidityScore').value = data.market.liquidity || '';
-                    document.getElementById('sentimentScore').value = data.market.sentiment || '';
-                    document.getElementById('zz1000Change').value = data.market.zz1000 || '';
-                    document.getElementById('hs300Change').value = data.market.hs300 || '';
-                    if (data.market.decision) marketDecision = data.market.decision;
-                    updateMarketDecision();
-                }
-                if (data.trades) { trades = data.trades; renderTrades(); }
-                if (data.checks) {
-                    checks = data.checks;
-                    Object.keys(checks).forEach(key => { if (checks[key]) toggleCheck(key); });
-                }
-            }
-        }
-
-        function exportToday() {
-            const data = localStorage.getItem('decision_' + todayKey);
-            if (!data) { showToast('今日暂无数据', 'warning'); return; }
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `BBDA决策_${todayKey}.json`; a.click();
-            URL.revokeObjectURL(url);
-            showToast('已导出', 'success');
-        }
-
-        function updateUI() {
-            renderTrades();
-            updateCheckProgress();
-            if (marketDecision.total > 0) updateMarketDecision();
-        }
-
-        // ========== Toast ==========
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').textContent = msg;
-            const colors = { success: 'bg-green-600', warning: 'bg-yellow-500', danger: 'bg-red-600', info: 'bg-gray-800' };
-            toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 ${colors[type]} text-white rounded-full shadow-xl transition-all duration-300 -translate-y-20 opacity-0`;
-            setTimeout(() => { toast.classList.remove('-translate-y-20', 'opacity-0'); }, 10);
-            setTimeout(() => { toast.classList.add('-translate-y-20', 'opacity-0'); }, 2500);
+            document.getElementById('stockCode').focus();
         }
     </script>
 </body>
