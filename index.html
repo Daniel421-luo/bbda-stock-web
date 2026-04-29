@@ -53,7 +53,7 @@
         <div class="text-center max-w-md px-6">
             <div class="text-6xl mb-6">📊</div>
             <h1 class="text-3xl font-bold text-white mb-2">BBDA 股票分析</h1>
-            <p class="text-purple-200 mb-8">六层漏斗选股系统 v1.0</p>
+            <p class="text-purple-200 mb-8">六层漏斗选股系统 v4.3</p>
             <div class="bg-white/10 backdrop-blur rounded-2xl p-6">
                 <p class="text-white/80 text-sm mb-4">欢迎使用，请输入您的昵称</p>
                 <input type="text" id="nicknameInput" placeholder="请输入昵称" maxlength="20"
@@ -75,7 +75,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-gray-800">BBDA 股票分析</h1>
-                    <p class="text-xs text-gray-500">六层漏斗选股系统 v1.0</p>
+                    <p class="text-xs text-gray-500">六层漏斗选股系统 v4.3</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -160,7 +160,7 @@
                 </div>
             </div>
             <!-- 均线数据 -->
-            <div class="mt-4 grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div class="text-center p-3 bg-blue-50 rounded-xl">
                     <div class="text-xs text-gray-500">MA5</div>
                     <div id="ma5Display" class="font-bold text-blue-600">--</div>
@@ -185,6 +185,14 @@
                     <div class="text-xs text-gray-500">主力净流入</div>
                     <div id="mainFlowDisplay" class="font-bold text-red-600">--</div>
                 </div>
+                <div class="text-center p-3 bg-pink-50 rounded-xl">
+                    <div class="text-xs text-gray-500">总市值</div>
+                    <div id="totalCapDisplay" class="font-bold text-pink-600">--</div>
+                </div>
+                <div class="text-center p-3 bg-cyan-50 rounded-xl">
+                    <div class="text-xs text-gray-500">近30日最高</div>
+                    <div id="recentHighDisplay" class="font-bold text-cyan-600">--</div>
+                </div>
             </div>
         </section>
 
@@ -205,7 +213,7 @@
                     </div>
                     <input type="range" id="rpsSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('rps')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>后50%</span><span>前30%</span><span>前10%</span>
+                        <span>1-后50%</span><span>2-前50%</span><span>3-前30%</span><span>4-前20%</span><span>5-前10%</span>
                     </div>
                 </div>
 
@@ -216,7 +224,7 @@
                     </div>
                     <input type="range" id="dragonSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('dragon')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>边缘</span><span>前排</span><span>板块前2</span>
+                        <span>1-边缘</span><span>2-跟风</span><span>3-前排</span><span>4-前3</span><span>5-前2+前3成交</span>
                     </div>
                 </div>
 
@@ -227,7 +235,7 @@
                     </div>
                     <input type="range" id="volumeSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('volume')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>缩量/异常</span><span>承接可</span><span>放量突破</span>
+                        <span>1-缩量异常</span><span>2-一般</span><span>3-承接可</span><span>4-放量明显</span><span>5-放量突破+换手8-20%</span>
                     </div>
                 </div>
 
@@ -238,7 +246,7 @@
                     </div>
                     <input type="range" id="capSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('cap')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>>500亿</span><span>20-50亿</span><span>50-300亿</span>
+                        <span>1-<20亿</span><span>2->500亿</span><span>3-20-50亿</span><span>4-300-500亿</span><span>5-50-300亿</span>
                     </div>
                 </div>
 
@@ -249,7 +257,7 @@
                     </div>
                     <input type="range" id="catalystSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('catalyst')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>无/否决</span><span>有但一般</span><span>A类强催化</span>
+                        <span>1-无/否决</span><span>2-模糊</span><span>3-有但一般</span><span>4-B类强</span><span>5-A类强催化</span>
                     </div>
                 </div>
 
@@ -260,7 +268,7 @@
                     </div>
                     <input type="range" id="chipsSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('chips')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>密集套牢</span><span>一般</span><span>平台突破</span>
+                        <span>1-密集套牢</span><span>2-偏重</span><span>3-一般</span><span>4-健康</span><span>5-平台突破充分</span>
                     </div>
                 </div>
             </div>
@@ -329,31 +337,36 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
-                <div class="p-3 bg-blue-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">① RPS</div>
-                    <div id="rpsResult" class="text-lg font-bold text-blue-600">3分</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                <div class="p-3 bg-blue-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">① RPS</span><span id="rpsResult" class="text-sm font-bold text-blue-600">3分</span></div>
+                    <div class="bg-blue-200 rounded-full h-2"><div id="rpsBar" class="bg-blue-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
-                <div class="p-3 bg-amber-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">② 龙头</div>
-                    <div id="dragonResult" class="text-lg font-bold text-amber-600">3分</div>
+                <div class="p-3 bg-amber-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">② 龙头</span><span id="dragonResult" class="text-sm font-bold text-amber-600">3分</span></div>
+                    <div class="bg-amber-200 rounded-full h-2"><div id="dragonBar" class="bg-amber-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
-                <div class="p-3 bg-green-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">③ 量价</div>
-                    <div id="volumeResult" class="text-lg font-bold text-green-600">3分</div>
+                <div class="p-3 bg-green-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">③ 量价</span><span id="volumeResult" class="text-sm font-bold text-green-600">3分</span></div>
+                    <div class="bg-green-200 rounded-full h-2"><div id="volumeBar" class="bg-green-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
-                <div class="p-3 bg-pink-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">④ 市值</div>
-                    <div id="capResult" class="text-lg font-bold text-pink-600">3分</div>
+                <div class="p-3 bg-pink-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">④ 市值</span><span id="capResult" class="text-sm font-bold text-pink-600">3分</span></div>
+                    <div class="bg-pink-200 rounded-full h-2"><div id="capBar" class="bg-pink-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
-                <div class="p-3 bg-violet-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">⑤ 催化</div>
-                    <div id="catalystResult" class="text-lg font-bold text-violet-600">3分</div>
+                <div class="p-3 bg-violet-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">⑤ 催化</span><span id="catalystResult" class="text-sm font-bold text-violet-600">3分</span></div>
+                    <div class="bg-violet-200 rounded-full h-2"><div id="catalystBar" class="bg-violet-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
-                <div class="p-3 bg-cyan-50 rounded-xl text-center">
-                    <div class="text-xs text-gray-500">⑥ 结构</div>
-                    <div id="chipsResult" class="text-lg font-bold text-cyan-600">3分</div>
+                <div class="p-3 bg-cyan-50 rounded-xl">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-gray-500">⑥ 结构</span><span id="chipsResult" class="text-sm font-bold text-cyan-600">3分</span></div>
+                    <div class="bg-cyan-200 rounded-full h-2"><div id="chipsBar" class="bg-cyan-500 rounded-full h-2" style="width:60%"></div></div>
                 </div>
+            </div>
+
+            <div class="mb-6 bg-gray-50 rounded-2xl p-4">
+                <div class="text-xs text-gray-500 mb-2">30日价格走势</div>
+                <canvas id="priceChart" class="w-full" height="160"></canvas>
             </div>
 
             <div id="adviceBox" class="p-6 rounded-2xl text-center mb-6">
@@ -369,9 +382,113 @@
         </section>
     </main>
 
+    <!-- 留言板 -->
+    <section id="messageBoard" class="max-w-5xl mx-auto px-4 py-6" style="display:none">
+        <div class="bg-white rounded-3xl shadow-lg p-6">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-comments text-white text-sm"></i>
+                </div>
+                用户留言
+            </h2>
+            <div class="mb-6 p-4 bg-gray-50 rounded-2xl" id="messageFormArea">
+                <textarea id="messageContent" placeholder="说点什么吧..." maxlength="500" rows="2"
+                    class="w-full px-4 py-3 bg-white border-0 rounded-xl resize-none text-sm"
+                    oninput="updateCharCount()"></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="charCount" class="text-xs text-gray-400">0/500</span>
+                    <button onclick="postMessage()" id="postMsgBtn"
+                        class="px-5 py-2 bg-primary text-white rounded-xl text-sm hover:bg-primary-light transition disabled:opacity-50"
+                        disabled>
+                        <i class="fas fa-paper-plane mr-1"></i>发送
+                    </button>
+                </div>
+            </div>
+            <div id="messageError" class="mb-3 p-3 bg-red-50 rounded-xl text-red-600 text-sm" style="display:none"></div>
+            <div id="messageApiUnavailable" class="mb-3 p-3 bg-yellow-50 rounded-xl text-yellow-700 text-sm" style="display:none">
+                <i class="fas fa-info-circle mr-1"></i>留言功能仅在主站可用（GitHub Pages 不支持后端API）
+            </div>
+            <div id="messageList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+            <div id="loadMoreArea" class="text-center mt-4" style="display:none">
+                <button onclick="loadMoreMessages()" class="px-5 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm hover:bg-gray-200 transition">
+                    加载更多 <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+            </div>
+            <div id="messageLoading" class="text-center py-4" style="display:none">
+                <i class="fas fa-spinner loading-spin text-gray-400"></i>
+                <span class="text-sm text-gray-400 ml-2">加载中...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 管理员面板 -->
+    <section id="adminPanel" class="max-w-5xl mx-auto px-4 py-6" style="display:none">
+        <div class="bg-white rounded-3xl shadow-lg p-6">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-red-400 to-pink-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-shield-haltered text-white text-sm"></i>
+                </div>
+                管理员面板
+                <button onclick="closeAdminPanel()" class="ml-auto px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-sm hover:bg-gray-200">
+                    <i class="fas fa-times mr-1"></i>关闭
+                </button>
+            </h2>
+            <div class="flex gap-2 mb-4 border-b border-gray-200 pb-2">
+                <button onclick="switchAdminTab('logs')" id="adminTabLogs"
+                    class="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white">访问记录</button>
+                <button onclick="switchAdminTab('messages')" id="adminTabMessages"
+                    class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600">留言管理</button>
+            </div>
+            <div id="adminLogsPanel">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">时间</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">昵称</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">IP</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">UA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminLogsBody"></tbody>
+                    </table>
+                </div>
+                <div id="adminLogsLoading" class="text-center py-4" style="display:none">
+                    <i class="fas fa-spinner loading-spin text-gray-400"></i>
+                </div>
+            </div>
+            <div id="adminMessagesPanel" style="display:none">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">时间</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">昵称</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">内容</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">IP</th>
+                                <th class="text-left py-2 px-3 text-gray-500 font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminMessagesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <button onclick="exportLogsCSV()" class="px-4 py-2 bg-green-100 text-green-700 rounded-xl text-sm hover:bg-green-200 transition">
+                    <i class="fas fa-download mr-1"></i>导出访问记录 CSV
+                </button>
+            </div>
+        </div>
+    </section>
+
     <footer class="text-center py-6 text-gray-400">
-        <div class="mb-3 text-sm">BBDA 股票分析工具 · 六层漏斗选股系统 v1.0 · 适用：主板（60/00），排除ST/创业板/科创板</div>
+        <div class="mb-3 text-sm">BBDA 股票分析工具 · 六层漏斗选股系统 v4.3 · 适用：主板（60/00），排除ST/创业板/科创板</div>
         <div id="welcomeMsg"></div>
+        <div class="mt-2">
+            <a href="#" onclick="showAdminLoginModal();return false;" class="text-gray-400 hover:text-gray-600 text-xs transition">
+                <i class="fas fa-lock mr-1"></i>管理
+            </a>
+        </div>
     </footer>
 
     <!-- 赞助弹窗 -->
@@ -395,6 +512,27 @@
             <span class="text-xl">☕</span>
             <span class="font-medium text-sm">赞助一杯咖啡</span>
         </button>
+    </div>
+
+    <!-- 管理员登录弹窗 -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center" style="display:none">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">管理员登录</h3>
+            <input type="password" id="adminPasswordInput" placeholder="请输入管理员密码"
+                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl mb-3"
+                onkeydown="if(event.key==='Enter')adminLogin()">
+            <div id="adminLoginError" class="mb-3 p-2 bg-red-50 rounded-xl text-red-600 text-sm" style="display:none"></div>
+            <div class="flex gap-3">
+                <button onclick="adminLogin()" id="adminLoginBtn"
+                    class="flex-1 px-4 py-2 bg-primary text-white rounded-xl text-sm hover:bg-primary-light transition">
+                    登录
+                </button>
+                <button onclick="closeAdminLoginModal()"
+                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm hover:bg-gray-200 transition">
+                    取消
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -440,7 +578,7 @@
                 else throw new Error('仅支持主板股票（60/00/30开头）');
 
                 // 1. 获取实时价格+资金流向（东方财富，支持CORS）
-                const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f62,f184,f169,f170`;
+                const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f62,f184,f169,f170,f20,f116`;
                 const priceRes = await fetch(priceUrl, {
                     headers: { 'Referer': 'https://quote.eastmoney.com', 'Accept': 'application/json' }
                 });
@@ -467,6 +605,8 @@
                 const amount = priceJson.data.f60; // 成交额
                 const mainNetInflow = priceJson.data.f62 / 10000; // 主力净流入（万元）
                 const mainNetInflowPct = priceJson.data.f184 / 100; // 主力净流入占比（%）
+                const totalCap = priceJson.data.f20; // 总市值（元）
+                const floatCap = priceJson.data.f116; // 流通市值（元）
 
                 // 2. 获取30日K线数据
                 const klineUrl = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=101&fqt=1&lmt=30&end=20500101`;
@@ -502,7 +642,7 @@
                     pctChange, closes, vols, amount,
                     ma5, ma10, ma20, ma10_prev, ma20_prev,
                     v5, v20, volRatio, recentHigh, sector,
-                    mainNetInflow, mainNetInflowPct
+                    mainNetInflow, mainNetInflowPct, totalCap, floatCap
                 };
 
                 // 更新界面
@@ -586,6 +726,24 @@
                 flowEl.className = 'font-bold ' + (mainNetInflow >= 0 ? 'text-red-600' : 'text-green-600');
             }
 
+            // 市值展示
+            const capEl = document.getElementById('totalCapDisplay');
+            if (stockData.totalCap) {
+                const capYi = (stockData.totalCap / 1e8).toFixed(0);
+                capEl.textContent = capYi + '亿';
+                const capB = stockData.totalCap / 1e8;
+                capEl.className = 'font-bold ' + (capB >= 50 && capB <= 300 ? 'text-green-600' : 'text-pink-600');
+            } else if (stockData.floatCap) {
+                const capYi = (stockData.floatCap / 1e8).toFixed(0);
+                capEl.textContent = capYi + '亿(流通)';
+                capEl.className = 'font-bold text-pink-600';
+            } else {
+                capEl.textContent = '--';
+                capEl.className = 'font-bold text-pink-600';
+            }
+
+            document.getElementById('recentHighDisplay').textContent = stockData.recentHigh.toFixed(2);
+
             updateTrendUI();
         }
 
@@ -658,9 +816,35 @@
 
         function autoSetScores() {
             if (!stockData) return;
-            const { volRatio, pctChange, currentPrice, ma10, mainNetInflow, mainNetInflowPct } = stockData;
+            const { volRatio, pctChange, currentPrice, ma10, mainNetInflow, mainNetInflowPct, totalCap, floatCap, closes, vols } = stockData;
 
-            // 量价质量：量比 + 资金流入综合判断
+            // ① RPS 相对强度：基于近5日涨跌 + 价格在30日区间位置
+            let rpsScore = 3;
+            const price5d = avg(closes.slice(-5));
+            const price20d = avg(closes.slice(-20));
+            const momentum5d = (price5d / price20d - 1) * 100; // 近5日相对20日均价的偏离
+            const range30 = Math.max(...closes) - Math.min(...closes);
+            const posInRange = range30 > 0 ? (currentPrice - Math.min(...closes)) / range30 : 0.5;
+            if (momentum5d > 3 && posInRange > 0.7) rpsScore = 5;
+            else if (momentum5d > 1.5 && posInRange > 0.5) rpsScore = 4;
+            else if (momentum5d > 0 && posInRange > 0.3) rpsScore = 3;
+            else if (momentum5d > -2) rpsScore = 2;
+            else rpsScore = 1;
+            setScore('rps', rpsScore);
+
+            // ② 龙头地位：基于主力净流入占比 + 量能强度
+            let dragonScore = 3;
+            const isMainInflow = mainNetInflow > 0;
+            const inflowPctAbs = Math.abs(mainNetInflowPct || 0);
+            if (isMainInflow && inflowPctAbs > 5 && volRatio > 1.5) dragonScore = 5;
+            else if (isMainInflow && inflowPctAbs > 3) dragonScore = 4;
+            else if (isMainInflow && volRatio > 1.2) dragonScore = 4;
+            else if (isMainInflow) dragonScore = 3;
+            else if (!isMainInflow && volRatio < 0.8) dragonScore = 1;
+            else dragonScore = 2;
+            setScore('dragon', dragonScore);
+
+            // ③ 量价质量：量比 + 资金流入综合判断
             let volScore = 3;
             if (volRatio > 1.5 && pctChange > 0 && mainNetInflow > 0) volScore = 5;
             else if (volRatio > 1.2 && mainNetInflow > 0) volScore = 4;
@@ -670,19 +854,29 @@
             else volScore = 2;
             setScore('volume', volScore);
 
-            // 结构（价格与MA10关系）
+            // ④ 市值弹性：基于流通市值（亿）
+            let capScore = 3;
+            if (totalCap || floatCap) {
+                const capBillion = ((floatCap || totalCap) / 1e8); // 转为亿
+                if (capBillion >= 50 && capBillion <= 300) capScore = 5;
+                else if (capBillion > 300 && capBillion <= 500) capScore = 4;
+                else if (capBillion > 20 && capBillion < 50) capScore = 3;
+                else if (capBillion > 500) capScore = 2;
+                else capScore = 1; // < 20亿
+            }
+            setScore('cap', capScore);
+
+            // ⑤ 催化强度：默认3分，需人工判断
+            setScore('catalyst', 3);
+
+            // ⑥ 筹码结构：价格与MA10关系 + 趋势强度
             let chipsScore = 3;
             const priceToMA10 = currentPrice / ma10;
-            if (priceToMA10 > 1.05) chipsScore = 4;
+            if (priceToMA10 > 1.05 && momentum5d > 1) chipsScore = 5;
+            else if (priceToMA10 > 1.05) chipsScore = 4;
             else if (priceToMA10 >= 0.97) chipsScore = 3;
             else chipsScore = 2;
             setScore('chips', chipsScore);
-
-            // RPS、龙头、市值、催化：默认3分，需人工判断
-            setScore('rps', 3);
-            setScore('dragon', 3);
-            setScore('cap', 3);
-            setScore('catalyst', 3);
         }
 
         function setScore(dim, val) {
@@ -714,10 +908,10 @@
                 adviceOperation = '持有'; advice = '可操作，仓位40-60%'; adviceClass = 'bg-blue-500';
             } else if (total >= 14) {
                 grade = 'C'; gradeClass = 'grade-c';
-                adviceOperation = '观望'; advice = '观察，不主动开仓'; adviceClass = 'bg-yellow-500';
+                adviceOperation = '观察'; advice = '观察，不主动开仓'; adviceClass = 'bg-yellow-500';
             } else {
                 grade = 'D'; gradeClass = 'grade-d';
-                adviceOperation = '回避'; advice = '风险大于机会'; adviceClass = 'bg-red-500';
+                adviceOperation = '清仓'; advice = '风险大于机会，建议清仓'; adviceClass = 'bg-red-500';
             }
 
             if (currentTrend === '下跌' && grade !== 'D') {
@@ -738,6 +932,14 @@
             document.getElementById('capResult').textContent = scores.cap + '分';
             document.getElementById('catalystResult').textContent = scores.catalyst + '分';
             document.getElementById('chipsResult').textContent = scores.chips + '分';
+
+            // 更新进度条
+            document.getElementById('rpsBar').style.width = (scores.rps / 5 * 100) + '%';
+            document.getElementById('dragonBar').style.width = (scores.dragon / 5 * 100) + '%';
+            document.getElementById('volumeBar').style.width = (scores.volume / 5 * 100) + '%';
+            document.getElementById('capBar').style.width = (scores.cap / 5 * 100) + '%';
+            document.getElementById('catalystBar').style.width = (scores.catalyst / 5 * 100) + '%';
+            document.getElementById('chipsBar').style.width = (scores.chips / 5 * 100) + '%';
 
             document.getElementById('adviceBox').className = 'p-6 rounded-2xl text-center mb-6 ' + adviceClass;
             document.getElementById('adviceOperation').textContent = adviceOperation;
@@ -774,6 +976,7 @@
 
             document.getElementById('outputFormat').textContent = output;
             showSponsorBtn();
+            drawPriceChart();
         }
 
         // ========== 重置 ==========
@@ -801,11 +1004,99 @@
             return arr.reduce((a, b) => a + b, 0) / arr.length;
         }
 
+        // ========== 迷你价格走势图 ==========
+
+        function drawPriceChart() {
+            if (!stockData) return;
+            const canvas = document.getElementById('priceChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = 160;
+            const w = rect.width, h = 160;
+            const pad = { top: 20, right: 20, bottom: 30, left: 50 };
+            const pw = w - pad.left - pad.right;
+            const ph = h - pad.top - pad.bottom;
+
+            const closes = stockData.closes.slice(-30);
+            const ma10Arr = stockData.closes.slice(-30).map((_, i) => {
+                const start = Math.max(0, i - 9);
+                const slice = stockData.closes.slice(Math.max(0, stockData.closes.length - 30 + start),
+                    stockData.closes.length - 30 + i + 1);
+                return slice.length >= 3 ? avg(slice.slice(-Math.min(10, slice.length))) : null;
+            }).filter(v => v !== null);
+
+            const min = Math.min(...closes) * 0.98;
+            const max = Math.max(...closes) * 1.02;
+            const range = max - min || 1;
+
+            const x = i => pad.left + (i / (closes.length - 1)) * pw;
+            const y = v => pad.top + ph - ((v - min) / range) * ph;
+
+            // 背景网格
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < 4; i++) {
+                const gy = pad.top + (ph / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(pad.left, gy);
+                ctx.lineTo(w - pad.right, gy);
+                ctx.stroke();
+                const label = (max - (range / 4) * i).toFixed(2);
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(label, pad.left - 4, gy + 3);
+            }
+
+            // 价格区域填充
+            ctx.beginPath();
+            ctx.moveTo(x(0), pad.top + ph);
+            closes.forEach((c, i) => ctx.lineTo(x(i), y(c)));
+            ctx.lineTo(x(closes.length - 1), pad.top + ph);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ph);
+            grad.addColorStop(0, 'rgba(99,102,241,0.2)');
+            grad.addColorStop(1, 'rgba(99,102,241,0.02)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // 价格线
+            ctx.beginPath();
+            closes.forEach((c, i) => ctx.lineTo(x(i), y(c)));
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // MA10线
+            if (ma10Arr.length > 0) {
+                ctx.beginPath();
+                ma10Arr.forEach((v, i) => {
+                    const xi = x(closes.length - ma10Arr.length + i);
+                    if (v !== null) ctx.lineTo(xi, y(v));
+                });
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 3]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // 图例
+            ctx.fillStyle = '#6366f1';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('— 价格', w - pad.right - 100, pad.top - 6);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText('-- MA10', w - pad.right - 40, pad.top - 6);
+        }
+
         // ========== 欢迎页 ==========
 
         let userName = '';
 
-        function enterMain() {
+        async function enterMain() {
             const name = document.getElementById('nicknameInput').value.trim();
             if (!name) {
                 document.getElementById('nicknameInput').focus();
@@ -814,6 +1105,15 @@
             userName = name;
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('welcomeMsg').innerHTML = '<span class="text-base font-bold text-indigo-600">🎉 ' + userName + '，祝股票大涨，财富自由！</span>';
+
+            // 显示留言板
+            document.getElementById('messageBoard').style.display = 'block';
+
+            // 记录访问（静默，失败不影响）
+            apiCall('visit', { method: 'POST', body: { nickname: userName } }).catch(() => {});
+
+            // 加载留言
+            loadMessages();
         }
 
         // ========== 赞助弹窗 ==========
@@ -829,6 +1129,281 @@
 
         function showSponsorBtn() {
             document.getElementById('sponsorBtn').style.display = 'block';
+        }
+
+        // 窗口resize时重绘图表
+        window.addEventListener('resize', function () {
+            if (stockData) drawPriceChart();
+        });
+
+        // ========== 留言板 & 管理员 ==========
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `/.netlify/functions/${endpoint}`;
+            const config = {
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            };
+            if (config.body && typeof config.body === 'object') {
+                config.body = JSON.stringify(config.body);
+            }
+            try {
+                const res = await fetch(url, config);
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP ${res.status}`);
+                }
+                return await res.json();
+            } catch (e) {
+                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+                    return { success: false, error: 'API_UNAVAILABLE', message: '后端API不可用' };
+                }
+                return { success: false, error: e.message };
+            }
+        }
+
+        // === 留言板 ===
+
+        let messagePage = 1;
+        let messageTotalPages = 1;
+        const MESSAGE_LIMIT = 20;
+
+        async function loadMessages(page = 1) {
+            document.getElementById('messageLoading').style.display = 'block';
+            const result = await apiCall(`messages?page=${page}&limit=${MESSAGE_LIMIT}`);
+
+            if (result.error === 'API_UNAVAILABLE') {
+                document.getElementById('messageApiUnavailable').style.display = 'block';
+                document.getElementById('messageFormArea').style.display = 'none';
+                document.getElementById('messageLoading').style.display = 'none';
+                return;
+            }
+
+            if (result.success && result.messages) {
+                renderMessages(result.messages, page === 1);
+                messagePage = result.page;
+                messageTotalPages = result.totalPages;
+                document.getElementById('loadMoreArea').style.display =
+                    (messagePage < messageTotalPages) ? 'block' : 'none';
+            }
+            document.getElementById('messageLoading').style.display = 'none';
+        }
+
+        function renderMessages(messages, replace) {
+            const container = document.getElementById('messageList');
+            if (replace) container.innerHTML = '';
+            messages.forEach(msg => {
+                const timeStr = new Date(msg.createdAt).toLocaleString('zh-CN', {
+                    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+                const escaped = escapeHtml(msg.content);
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-gray-50 rounded-xl';
+                div.innerHTML =
+                    '<div class="flex justify-between items-start mb-1">' +
+                    '<span class="font-medium text-gray-700 text-sm">' + escapeHtml(msg.nickname) + '</span>' +
+                    '<span class="text-xs text-gray-400">' + timeStr + '</span>' +
+                    '</div>' +
+                    '<p class="text-gray-600 text-sm whitespace-pre-wrap">' + escaped + '</p>';
+                container.appendChild(div);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function updateCharCount() {
+            const textarea = document.getElementById('messageContent');
+            const count = document.getElementById('charCount');
+            const btn = document.getElementById('postMsgBtn');
+            const len = textarea.value.trim().length;
+            count.textContent = len + '/500';
+            btn.disabled = len === 0 || len > 500;
+        }
+
+        async function postMessage() {
+            const content = document.getElementById('messageContent').value.trim();
+            if (!content || !userName) return;
+
+            const btn = document.getElementById('postMsgBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner loading-spin mr-1"></i>发送中...';
+
+            const result = await apiCall('messages', {
+                method: 'POST',
+                body: { nickname: userName, content: content }
+            });
+
+            if (result.success) {
+                document.getElementById('messageContent').value = '';
+                updateCharCount();
+                await loadMessages(1);
+            } else if (result.error) {
+                const errEl = document.getElementById('messageError');
+                errEl.textContent = result.error;
+                errEl.style.display = 'block';
+                setTimeout(function () { errEl.style.display = 'none'; }, 3000);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>发送';
+        }
+
+        async function loadMoreMessages() {
+            await loadMessages(messagePage + 1);
+        }
+
+        // === 管理员 ===
+
+        let adminToken = null;
+        let adminTimestamp = null;
+
+        function showAdminLoginModal() {
+            document.getElementById('adminLoginModal').style.display = 'flex';
+            document.getElementById('adminPasswordInput').focus();
+        }
+
+        function closeAdminLoginModal() {
+            document.getElementById('adminLoginModal').style.display = 'none';
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminLoginError').style.display = 'none';
+        }
+
+        async function adminLogin() {
+            const password = document.getElementById('adminPasswordInput').value.trim();
+            if (!password) return;
+
+            const btn = document.getElementById('adminLoginBtn');
+            btn.disabled = true;
+
+            const result = await apiCall('admin', {
+                method: 'POST',
+                body: { action: 'login', password: password }
+            });
+
+            if (result.success && result.token) {
+                adminToken = result.token;
+                adminTimestamp = result.timestamp;
+                closeAdminLoginModal();
+                document.getElementById('adminPanel').style.display = 'block';
+                switchAdminTab('logs');
+            } else {
+                document.getElementById('adminLoginError').textContent = result.error || '密码错误';
+                document.getElementById('adminLoginError').style.display = 'block';
+            }
+
+            btn.disabled = false;
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminPanel').style.display = 'none';
+            adminToken = null;
+            adminTimestamp = null;
+        }
+
+        function switchAdminTab(tab) {
+            document.getElementById('adminTabLogs').className =
+                tab === 'logs' ? 'px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white'
+                               : 'px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600';
+            document.getElementById('adminTabMessages').className =
+                tab === 'messages' ? 'px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white'
+                                   : 'px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600';
+            document.getElementById('adminLogsPanel').style.display = tab === 'logs' ? 'block' : 'none';
+            document.getElementById('adminMessagesPanel').style.display = tab === 'messages' ? 'block' : 'none';
+
+            if (tab === 'logs') loadAdminLogs();
+            else loadAdminMessages();
+        }
+
+        async function loadAdminLogs(page) {
+            page = page || 1;
+            document.getElementById('adminLogsLoading').style.display = 'block';
+            const result = await apiCall('admin', {
+                method: 'POST',
+                body: { action: 'list_logs', token: adminToken, timestamp: adminTimestamp, page: page, limit: 50 }
+            });
+
+            if (result.success) {
+                const tbody = document.getElementById('adminLogsBody');
+                tbody.innerHTML = '';
+                result.logs.forEach(function (log) {
+                    const timeStr = new Date(log.createdAt).toLocaleString('zh-CN');
+                    const uaShort = (log.userAgent || '').substring(0, 60);
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-100';
+                    tr.innerHTML =
+                        '<td class="py-2 px-3 text-gray-600">' + timeStr + '</td>' +
+                        '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(log.nickname) + '</td>' +
+                        '<td class="py-2 px-3 text-gray-500 text-xs">' + escapeHtml(log.ip) + '</td>' +
+                        '<td class="py-2 px-3 text-gray-400 text-xs">' + escapeHtml(uaShort) + '</td>';
+                    tbody.appendChild(tr);
+                });
+            }
+            document.getElementById('adminLogsLoading').style.display = 'none';
+        }
+
+        async function loadAdminMessages(page) {
+            page = page || 1;
+            const result = await apiCall('admin', {
+                method: 'POST',
+                body: { action: 'list_messages', token: adminToken, timestamp: adminTimestamp, page: page, limit: 50 }
+            });
+
+            if (result.success) {
+                const tbody = document.getElementById('adminMessagesBody');
+                tbody.innerHTML = '';
+                result.messages.forEach(function (msg) {
+                    const timeStr = new Date(msg.createdAt).toLocaleString('zh-CN');
+                    const contentShort = msg.content.length > 30 ? msg.content.substring(0, 30) + '...' : msg.content;
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-100';
+                    tr.innerHTML =
+                        '<td class="py-2 px-3 text-gray-600 text-xs">' + timeStr + '</td>' +
+                        '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(msg.nickname) + '</td>' +
+                        '<td class="py-2 px-3 text-gray-500 text-sm">' + escapeHtml(contentShort) + '</td>' +
+                        '<td class="py-2 px-3 text-gray-400 text-xs">' + escapeHtml(msg.ip || '') + '</td>' +
+                        '<td class="py-2 px-3"><button onclick="deleteMessage(\'' + msg.objectId + '\')" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-xs hover:bg-red-200 transition">删除</button></td>';
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        async function deleteMessage(messageId) {
+            if (!confirm('确定删除这条留言吗？')) return;
+            const result = await apiCall('admin', {
+                method: 'POST',
+                body: { action: 'delete_message', token: adminToken, timestamp: adminTimestamp, messageId: messageId }
+            });
+            if (result.success) {
+                loadAdminMessages();
+                loadMessages(1);
+            }
+        }
+
+        async function exportLogsCSV() {
+            // 尽可能多地获取记录
+            const result = await apiCall('admin', {
+                method: 'POST',
+                body: { action: 'list_logs', token: adminToken, timestamp: adminTimestamp, page: 1, limit: 100 }
+            });
+            if (!result.success || !result.logs.length) {
+                alert('没有数据可导出');
+                return;
+            }
+            var csv = '﻿时间,昵称,IP\n';
+            result.logs.forEach(function (log) {
+                csv += new Date(log.createdAt).toLocaleString('zh-CN') + ',' + log.nickname + ',' + log.ip + '\n';
+            });
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = '访问记录_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
