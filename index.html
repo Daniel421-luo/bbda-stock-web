@@ -53,7 +53,7 @@
         <div class="text-center max-w-md px-6">
             <div class="text-6xl mb-6">📊</div>
             <h1 class="text-3xl font-bold text-white mb-2">BBDA 股票分析</h1>
-            <p class="text-purple-200 mb-8">六层漏斗选股系统 v4.3</p>
+            <p class="text-purple-200 mb-8">六层漏斗选股系统 v4.4</p>
             <div class="bg-white/10 backdrop-blur rounded-2xl p-6">
                 <p class="text-white/80 text-sm mb-4">欢迎使用，请输入您的昵称</p>
                 <input type="text" id="nicknameInput" placeholder="请输入昵称" maxlength="20"
@@ -75,7 +75,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-gray-800">BBDA 股票分析</h1>
-                    <p class="text-xs text-gray-500">六层漏斗选股系统 v4.3</p>
+                    <p class="text-xs text-gray-500">六层漏斗选股系统 v4.4</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -122,6 +122,50 @@
                 <span class="text-sm text-gray-500">正在获取数据...</span>
             </div>
             <div id="errorMsg" class="mt-3 p-3 bg-red-50 rounded-xl text-red-600 text-sm" style="display:none"></div>
+        </section>
+
+        <!-- 第0层：市场状态机 -->
+        <section id="marketSection" class="bg-white rounded-3xl shadow-lg p-6" style="display:none">
+            <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-globe-asia text-white text-sm"></i>
+                </div>
+                第0层：市场状态机（决定仓位上限）
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="text-center p-4 bg-blue-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">① 趋势（沪深300+中证1000）</div>
+                    <div id="marketTrendScore" class="text-3xl font-bold text-blue-600">--</div>
+                    <div id="marketTrendDesc" class="text-xs text-gray-400 mt-1"></div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">② 流动性（成交额均比）</div>
+                    <div id="marketLiqScore" class="text-3xl font-bold text-green-600">--</div>
+                    <div id="marketLiqDesc" class="text-xs text-gray-400 mt-1"></div>
+                </div>
+                <div class="text-center p-4 bg-amber-50 rounded-2xl">
+                    <div class="text-xs text-gray-500 mb-2">③ 情绪（参考涨停溢价/炸板率/跌停）</div>
+                    <div id="marketSentScore" class="text-3xl font-bold text-amber-600">--</div>
+                    <input type="range" id="sentimentSlider" min="0" max="2" value="1" class="w-full slider mt-1" oninput="updateSentiment()">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0-低迷</span><span>1-中性</span><span>2-亢奋</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl text-center" id="marketSummaryBox">
+                <span class="text-xs text-gray-500">市场总分：</span>
+                <span id="marketTotalScore" class="text-2xl font-bold text-gray-800">--</span>
+                <span class="text-xs text-gray-400">/ 6分</span>
+                <span class="mx-3 text-gray-300">|</span>
+                <span class="text-xs text-gray-500">仓位上限：</span>
+                <span id="marketPositionCap" class="text-lg font-bold text-primary">--</span>
+                <span class="mx-3 text-gray-300">|</span>
+                <span id="marketMode" class="text-sm font-medium text-gray-600">--</span>
+            </div>
+            <div id="marketLoadingIndicator" class="text-center py-2" style="display:none">
+                <i class="fas fa-spinner loading-spin text-gray-400"></i>
+                <span class="text-sm text-gray-400 ml-2">获取市场数据...</span>
+            </div>
         </section>
 
         <!-- 趋势判断 -->
@@ -196,13 +240,13 @@
             </div>
         </section>
 
-        <!-- 六维评分 v4.3 -->
+        <!-- 六维评分 v4.4 -->
         <section id="scoreSection" class="bg-white rounded-3xl shadow-lg p-6" style="display:none">
             <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <div class="w-8 h-8 bg-gradient-to-br from-violet-400 to-purple-500 rounded-lg flex items-center justify-center">
                     <i class="fas fa-th-large text-white text-sm"></i>
                 </div>
-                六维评分 v4.3（每项0-5分，最高30分）
+                六维评分 v4.4（每项0-5分，最高30分）
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -224,7 +268,7 @@
                     </div>
                     <input type="range" id="dragonSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('dragon')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>1-边缘</span><span>2-跟风</span><span>3-前排</span><span>4-前3</span><span>5-前2+前3成交</span>
+                        <span>1-边缘</span><span>2-跟风</span><span>3-前排非核心</span><span>4-前3联动强</span><span>5-前2+前3成交+辨识度最高</span>
                     </div>
                 </div>
 
@@ -235,7 +279,7 @@
                     </div>
                     <input type="range" id="volumeSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('volume')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>1-缩量异常</span><span>2-一般</span><span>3-承接可</span><span>4-放量明显</span><span>5-放量突破+换手8-20%</span>
+                        <span>1-缩量拉升/异常一字/冲高回落</span><span>2-量价一般</span><span>3-承接可</span><span>4-放量结构良</span><span>5-放量突破+换手8-20%+非一字</span>
                     </div>
                 </div>
 
@@ -246,7 +290,7 @@
                     </div>
                     <input type="range" id="capSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('cap')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>1-<20亿</span><span>2->500亿</span><span>3-20-50亿</span><span>4-300-500亿</span><span>5-50-300亿</span>
+                        <span>1-<20亿波动失真</span><span>2-500亿以上</span><span>3-20-50亿</span><span>4-300-500亿</span><span>5-50-300亿（最优）</span>
                     </div>
                 </div>
 
@@ -257,7 +301,7 @@
                     </div>
                     <input type="range" id="catalystSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('catalyst')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>1-无/否决</span><span>2-模糊</span><span>3-有但一般</span><span>4-B类强</span><span>5-A类强催化</span>
+                        <span>1-无催化/C类否决</span><span>2-题材模糊</span><span>3-有但持续性一般</span><span>4-A或B类强催化</span><span>5-A类催化+A类投票</span>
                     </div>
                 </div>
 
@@ -268,7 +312,7 @@
                     </div>
                     <input type="range" id="chipsSlider" min="0" max="5" value="3" class="w-full slider" oninput="updateScore('chips')">
                     <div class="flex justify-between text-xs text-gray-400 mt-1">
-                        <span>1-密集套牢</span><span>2-偏重</span><span>3-一般</span><span>4-健康</span><span>5-平台突破充分</span>
+                        <span>1-套牢密集/股性差</span><span>2-上方抛压重</span><span>3-一般</span><span>4-结构健康</span><span>5-平台突破前充分整理套牢轻</span>
                     </div>
                 </div>
             </div>
@@ -314,6 +358,9 @@
                 </div>
                 分析结论
             </h2>
+            <div id="buyWindowIndicator" class="text-center p-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 mb-4">
+                <i class="fas fa-info-circle mr-1"></i>当前不在买入窗口，仅作分析参考
+            </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl">
@@ -482,7 +529,7 @@
     </section>
 
     <footer class="text-center py-6 text-gray-400">
-        <div class="mb-3 text-sm">BBDA 股票分析工具 · 六层漏斗选股系统 v4.3 · 适用：主板（60/00），排除ST/创业板/科创板</div>
+        <div class="mb-3 text-sm">BBDA 股票分析工具 · 六层漏斗选股系统 v4.4 · 适用：全市场（60/00/300/688），排除ST/B股/新股</div>
         <div id="welcomeMsg"></div>
         <div class="mt-2">
             <a href="#" onclick="showAdminLoginModal();return false;" class="text-gray-400 hover:text-gray-600 text-xs transition">
@@ -553,6 +600,7 @@
         }
 
         function hideAllSections() {
+            document.getElementById('marketSection').style.display = 'none';
             document.getElementById('trendSection').style.display = 'none';
             document.getElementById('scoreSection').style.display = 'none';
             document.getElementById('levelSection').style.display = 'none';
@@ -573,9 +621,10 @@
 
                 // 确定市场：6开头=沪市(1)，0/3开头=深市(0)
                 let secid;
-                if (cleanCode.startsWith('6')) secid = '1.' + cleanCode;
+                if (cleanCode.startsWith('688')) secid = '1.' + cleanCode;
+                else if (cleanCode.startsWith('6')) secid = '1.' + cleanCode;
                 else if (cleanCode.startsWith('0') || cleanCode.startsWith('3')) secid = '0.' + cleanCode;
-                else throw new Error('仅支持主板股票（60/00/30开头）');
+                else throw new Error('仅支持A股（60/00/30/688开头），排除ST/B股/新股');
 
                 // 1. 获取实时价格+资金流向（东方财富，支持CORS）
                 const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f62,f184,f169,f170,f20,f116`;
@@ -652,6 +701,8 @@
                 updateKeyLevels();
                 showAllSections();
                 updateResult();
+                updateBuyWindowIndicator();
+                fetchMarketState(); // 异步获取市场环境，不阻塞个股分析
 
             } catch (err) {
                 showError(err.message);
@@ -685,6 +736,7 @@
         }
 
         function showAllSections() {
+            document.getElementById('marketSection').style.display = 'block';
             document.getElementById('trendSection').style.display = 'block';
             document.getElementById('scoreSection').style.display = 'block';
             document.getElementById('levelSection').style.display = 'block';
@@ -787,6 +839,139 @@
             document.getElementById(id).className = 'text-lg font-bold ' + (value ? 'text-green-600' : 'text-red-400');
         }
 
+        // ========== 第0层：市场状态机 ==========
+
+        let marketState = { trend: null, liquidity: null, sentiment: 1 };
+
+        async function fetchMarketState() {
+            document.getElementById('marketLoadingIndicator').style.display = 'block';
+
+            try {
+                const klineUrl = (secid) =>
+                    `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58&klt=101&fqt=1&lmt=60&end=20500101`;
+
+                const [hs300Res, zz1000Res] = await Promise.all([
+                    fetch(klineUrl('1.000300'), { headers: { 'Referer': 'https://quote.eastmoney.com' } }),
+                    fetch(klineUrl('1.000852'), { headers: { 'Referer': 'https://quote.eastmoney.com' } })
+                ]);
+
+                const hs300Json = await hs300Res.json();
+                const zz1000Json = await zz1000Res.json();
+
+                // 趋势评分
+                let trendScore = 1;
+                let trendDesc = '';
+                if (hs300Json.data && zz1000Json.data) {
+                    const hsCloses = hs300Json.data.klines.map(k => parseFloat(k.split(',')[2]));
+                    const zzCloses = zz1000Json.data.klines.map(k => parseFloat(k.split(',')[2]));
+
+                    const hsMA20 = avg(hsCloses.slice(-20));
+                    const hsMA20Prev = avg(hsCloses.slice(-25, -5));
+                    const zzMA20 = avg(zzCloses.slice(-20));
+                    const zzMA20Prev = avg(zzCloses.slice(-25, -5));
+
+                    const hsAbove = hsCloses[hsCloses.length - 1] > hsMA20;
+                    const hsRising = hsMA20 >= hsMA20Prev * 0.998;
+                    const zzAbove = zzCloses[zzCloses.length - 1] > zzMA20;
+                    const zzRising = zzMA20 >= zzMA20Prev * 0.998;
+
+                    const hsStrong = hsAbove && hsRising;
+                    const zzStrong = zzAbove && zzRising;
+
+                    if (hsStrong && zzStrong) { trendScore = 2; trendDesc = '沪深300+中证1000均站上MA20且走平/上行'; }
+                    else if (!hsStrong && !zzStrong) { trendScore = 0; trendDesc = '两者均弱于MA20或MA20下行'; }
+                    else { trendScore = 1; trendDesc = '一强一弱，市场分化'; }
+
+                    // 流动性评分：5日均成交额 vs 20日均
+                    const hsVols = hs300Json.data.klines.map(k => parseFloat(k.split(',')[6]));
+                    const avgVol5 = avg(hsVols.slice(-5));
+                    const avgVol20 = avg(hsVols.slice(-20));
+                    const volRatio = avgVol20 > 0 ? avgVol5 / avgVol20 : 1;
+
+                    let liqScore = 1;
+                    let liqDesc = '';
+                    if (volRatio > 1.10) { liqScore = 2; liqDesc = `量比${volRatio.toFixed(2)}>1.10，放量活跃`; }
+                    else if (volRatio >= 0.95) { liqScore = 1; liqDesc = `量比${volRatio.toFixed(2)}，中性`; }
+                    else { liqScore = 0; liqDesc = `量比${volRatio.toFixed(2)}<0.95，缩量低迷`; }
+
+                    marketState.trend = trendScore;
+                    marketState.liquidity = liqScore;
+                }
+
+                updateMarketUI();
+            } catch (e) {
+                console.log('市场状态获取失败，使用默认值:', e.message);
+                marketState.trend = 1;
+                marketState.liquidity = 1;
+                updateMarketUI();
+            } finally {
+                document.getElementById('marketLoadingIndicator').style.display = 'none';
+            }
+        }
+
+        function updateSentiment() {
+            marketState.sentiment = parseInt(document.getElementById('sentimentSlider').value);
+            updateMarketUI();
+        }
+
+        function updateMarketUI() {
+            const t = marketState.trend;
+            const l = marketState.liquidity;
+            const s = marketState.sentiment;
+
+            document.getElementById('marketTrendScore').textContent = t !== null ? t : '--';
+            document.getElementById('marketTrendScore').className = 'text-3xl font-bold ' +
+                (t === 2 ? 'text-green-600' : t === 1 ? 'text-blue-600' : 'text-red-500');
+            document.getElementById('marketLiqScore').textContent = l !== null ? l : '--';
+            document.getElementById('marketLiqScore').className = 'text-3xl font-bold ' +
+                (l === 2 ? 'text-green-600' : l === 1 ? 'text-blue-600' : 'text-red-500');
+            document.getElementById('marketSentScore').textContent = s;
+
+            if (t !== null && l !== null) {
+                const total = t + l + s;
+                document.getElementById('marketTotalScore').textContent = total;
+
+                let posCap, mode, boxClass;
+                if (total >= 5) { posCap = '70%-90%'; mode = '重仓主升浪，允许金字塔加仓'; boxClass = 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'; }
+                else if (total === 4) { posCap = '40%-60%'; mode = '标准模式，布局2个低相关方向'; boxClass = 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200'; }
+                else if (total === 3) { posCap = '≤30%'; mode = '试仓模式，仅做最强方向龙头'; boxClass = 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200'; }
+                else { posCap = '0%'; mode = '强制空仓/仅持仓管理，触发账户熔断'; boxClass = 'bg-gradient-to-r from-red-50 to-rose-50 border border-red-200'; }
+
+                document.getElementById('marketPositionCap').textContent = posCap;
+                document.getElementById('marketMode').textContent = mode;
+                document.getElementById('marketSummaryBox').className = 'p-4 rounded-2xl text-center ' + boxClass;
+            }
+        }
+
+        // ========== 分板风控 ==========
+
+        function getBoardConfig(code) {
+            if (code.startsWith('688')) return { name: '科创板', stopLoss: 12, positionCap: 15, slip: 0.012 };
+            if (code.startsWith('300')) return { name: '创业板', stopLoss: 10, positionCap: 20, slip: 0.010 };
+            return { name: '主板', stopLoss: 8, positionCap: 30, slip: 0.005 };
+        }
+
+        // ========== 买入窗口检查 ==========
+
+        function checkBuyWindow() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            return (h === 10 && m >= 0 && m <= 30) || (h === 14 && m >= 30 && m <= 50);
+        }
+
+        function updateBuyWindowIndicator() {
+            const el = document.getElementById('buyWindowIndicator');
+            if (!el) return;
+            if (checkBuyWindow()) {
+                el.innerHTML = '<i class="fas fa-clock mr-1"></i>当前在买入窗口内 (10:00-10:30 / 14:30-14:50)';
+                el.className = 'text-center p-2 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700';
+            } else {
+                el.innerHTML = '<i class="fas fa-info-circle mr-1"></i>当前不在买入窗口，仅作分析参考';
+                el.className = 'text-center p-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500';
+            }
+        }
+
         // ========== 关键价位 ==========
 
         function updateKeyLevels() {
@@ -799,17 +984,17 @@
 
         function updateStopLoss() {
             if (!stockData) return;
+            const code = document.getElementById('stockCode').value.trim();
             const cost = parseFloat(document.getElementById('costPrice').value);
             if (!cost || cost <= 0) {
                 document.getElementById('stopLossDisplay').textContent = '--';
                 document.getElementById('stopLossPct').textContent = '--';
                 return;
             }
-            const total = Object.values(scores).reduce((a, b) => a + b, 0);
-            const stopPct = total >= 24 ? 7 : 2;
-            const stopLoss = (cost * (1 - stopPct / 100)).toFixed(2);
+            const board = getBoardConfig(code);
+            const stopLoss = (cost * (1 - board.stopLoss / 100)).toFixed(2);
             document.getElementById('stopLossDisplay').textContent = stopLoss;
-            document.getElementById('stopLossPct').textContent = `成本-${stopPct}%`;
+            document.getElementById('stopLossPct').textContent = `${board.name}-${board.stopLoss}%`;
         }
 
         // ========== 六维评分自动设置 ==========
@@ -952,11 +1137,15 @@
             const buyZoneLow = (ma10 * 0.97).toFixed(2);
             const buyZoneHigh = (ma10 * 1.03).toFixed(2);
 
-            const output = `【个股分析】${code} ${name}
+            const board = getBoardConfig(code);
+            const stopLossPct = board.stopLoss;
+
+            const output = `【个股分析】${code} ${name} | ${board.name}
 
 【评级】${grade}级（${total}/30分）
 【趋势】${currentTrend}
 【板块】${stockData.sector}
+【市场环境】${marketState.trend !== null ? '趋势' + marketState.trend + ' 流动性' + marketState.liquidity + ' 情绪' + marketState.sentiment + '（总分' + (marketState.trend+marketState.liquidity+marketState.sentiment) + '/6）' : '未获取'}
 
 【六维评分】
   ①RPS: ${scores.rps}分  ②龙头: ${scores.dragon}分  ③量价: ${scores.volume}分
@@ -966,13 +1155,14 @@
   现价: ${currentPrice.toFixed(2)}元（${pctChange > 0 ? '+' : ''}${pctChange.toFixed(2)}%）
   支撑: MA10=${ma10.toFixed(2)} / MA20=${ma20.toFixed(2)}
   回踩区间: ${buyZoneLow}~${buyZoneHigh}元（MA10±3%）
-  止损: ${stopLoss}元${cost > 0 ? '（-' + (total >= 24 ? '7%' : '2%') + '）' : ''}
+  止损: ${stopLoss}元${cost > 0 ? '（' + board.name + '-' + stopLossPct + '%）' : ''}
   目标: ${(recentHigh * 1.15).toFixed(2)}~${(recentHigh * 1.30).toFixed(2)}元
 
 【操作建议】
   操作：${adviceOperation}
   理由：${advice}
-  仓位：${grade === 'A' ? '标准仓40-60%' : grade === 'B' ? '40-60%' : grade === 'C' ? '观察' : '--'}`;
+  分板仓位上限：≤${board.positionCap}%
+  买入窗口：${checkBuyWindow() ? '窗口内，可执行' : '窗口外，仅作分析参考'}`;
 
             document.getElementById('outputFormat').textContent = output;
             showSponsorBtn();
@@ -994,7 +1184,13 @@
             document.getElementById('sectorDisplay').textContent = '--';
             document.getElementById('sectorDisplay').className = 'px-4 py-3 text-lg font-medium text-gray-400';
             stockData = null;
+            marketState = { trend: null, liquidity: null, sentiment: 1 };
             ['rps', 'dragon', 'volume', 'cap', 'catalyst', 'chips'].forEach(dim => setScore(dim, 3));
+            document.getElementById('sentimentSlider').value = 1;
+            document.getElementById('marketSentScore').textContent = '--';
+            document.getElementById('marketTotalScore').textContent = '--';
+            document.getElementById('marketPositionCap').textContent = '--';
+            document.getElementById('marketMode').textContent = '--';
             document.getElementById('stockCode').focus();
         }
 
