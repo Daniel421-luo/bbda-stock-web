@@ -1292,7 +1292,7 @@
 
         let userName = '';
 
-        async function enterMain() {
+        function enterMain() {
             const name = document.getElementById('nicknameInput').value.trim();
             if (!name) {
                 document.getElementById('nicknameInput').focus();
@@ -1305,8 +1305,10 @@
             // 显示留言板
             document.getElementById('messageBoard').style.display = 'block';
 
-            // 记录访问（静默，失败不影响）
-            apiCall('visit', { method: 'POST', body: { nickname: userName } }).catch(() => {});
+            // 记录访问到 localStorage
+            const visits = storageGet(STORAGE_KEY_VISITS);
+            visits.push({ id: generateId(), nickname: userName, time: new Date().toISOString() });
+            storageSet(STORAGE_KEY_VISITS, visits);
 
             // 加载留言
             loadMessages();
@@ -1332,56 +1334,40 @@
             if (stockData) drawPriceChart();
         });
 
-        // ========== 留言板 & 管理员 ==========
+        // ========== 留言板 & 管理员（localStorage 实现）==========
 
-        async function apiCall(endpoint, options = {}) {
-            const url = `/.netlify/functions/${endpoint}`;
-            const config = {
-                headers: { 'Content-Type': 'application/json' },
-                ...options
-            };
-            if (config.body && typeof config.body === 'object') {
-                config.body = JSON.stringify(config.body);
-            }
-            try {
-                const res = await fetch(url, config);
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || `HTTP ${res.status}`);
-                }
-                return await res.json();
-            } catch (e) {
-                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-                    return { success: false, error: 'API_UNAVAILABLE', message: '后端API不可用' };
-                }
-                return { success: false, error: e.message };
-            }
+        const STORAGE_KEY_MSGS = 'bbda_messages';
+        const STORAGE_KEY_VISITS = 'bbda_visits';
+        const ADMIN_PASSWORD = 'bbda6688';
+
+        function storageGet(key) {
+            try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
+        }
+
+        function storageSet(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
         }
 
         // === 留言板 ===
 
         let messagePage = 1;
-        let messageTotalPages = 1;
         const MESSAGE_LIMIT = 20;
 
-        async function loadMessages(page = 1) {
+        function loadMessages(page = 1) {
             document.getElementById('messageLoading').style.display = 'block';
-            const result = await apiCall(`messages?page=${page}&limit=${MESSAGE_LIMIT}`);
+            const all = storageGet(STORAGE_KEY_MSGS).sort((a, b) => b.createdAt - a.createdAt);
+            const start = (page - 1) * MESSAGE_LIMIT;
+            const msgs = all.slice(start, start + MESSAGE_LIMIT);
+            const totalPages = Math.ceil(all.length / MESSAGE_LIMIT) || 1;
 
-            if (result.error === 'API_UNAVAILABLE') {
-                document.getElementById('messageApiUnavailable').style.display = 'block';
-                document.getElementById('messageFormArea').style.display = 'none';
-                document.getElementById('messageLoading').style.display = 'none';
-                return;
-            }
-
-            if (result.success && result.messages) {
-                renderMessages(result.messages, page === 1);
-                messagePage = result.page;
-                messageTotalPages = result.totalPages;
-                document.getElementById('loadMoreArea').style.display =
-                    (messagePage < messageTotalPages) ? 'block' : 'none';
-            }
+            renderMessages(msgs, page === 1);
+            messagePage = page;
+            document.getElementById('loadMoreArea').style.display =
+                (page < totalPages) ? 'block' : 'none';
             document.getElementById('messageLoading').style.display = 'none';
         }
 
@@ -1420,7 +1406,7 @@
             btn.disabled = len === 0 || len > 500;
         }
 
-        async function postMessage() {
+        function postMessage() {
             const content = document.getElementById('messageContent').value.trim();
             if (!content || !userName) return;
 
@@ -1428,34 +1414,30 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner loading-spin mr-1"></i>发送中...';
 
-            const result = await apiCall('messages', {
-                method: 'POST',
-                body: { nickname: userName, content: content }
+            const msgs = storageGet(STORAGE_KEY_MSGS);
+            msgs.push({
+                id: generateId(),
+                nickname: userName,
+                content: content,
+                createdAt: Date.now()
             });
+            storageSet(STORAGE_KEY_MSGS, msgs);
 
-            if (result.success) {
-                document.getElementById('messageContent').value = '';
-                updateCharCount();
-                await loadMessages(1);
-            } else if (result.error) {
-                const errEl = document.getElementById('messageError');
-                errEl.textContent = result.error;
-                errEl.style.display = 'block';
-                setTimeout(function () { errEl.style.display = 'none'; }, 3000);
-            }
+            document.getElementById('messageContent').value = '';
+            updateCharCount();
+            loadMessages(1);
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>发送';
         }
 
-        async function loadMoreMessages() {
-            await loadMessages(messagePage + 1);
+        function loadMoreMessages() {
+            loadMessages(messagePage + 1);
         }
 
         // === 管理员 ===
 
-        let adminToken = null;
-        let adminTimestamp = null;
+        let adminLoggedIn = false;
 
         function showAdminLoginModal() {
             document.getElementById('adminLoginModal').style.display = 'flex';
@@ -1468,36 +1450,24 @@
             document.getElementById('adminLoginError').style.display = 'none';
         }
 
-        async function adminLogin() {
+        function adminLogin() {
             const password = document.getElementById('adminPasswordInput').value.trim();
             if (!password) return;
 
-            const btn = document.getElementById('adminLoginBtn');
-            btn.disabled = true;
-
-            const result = await apiCall('admin', {
-                method: 'POST',
-                body: { action: 'login', password: password }
-            });
-
-            if (result.success && result.token) {
-                adminToken = result.token;
-                adminTimestamp = result.timestamp;
+            if (password === ADMIN_PASSWORD) {
+                adminLoggedIn = true;
                 closeAdminLoginModal();
                 document.getElementById('adminPanel').style.display = 'block';
                 switchAdminTab('logs');
             } else {
-                document.getElementById('adminLoginError').textContent = result.error || '密码错误';
+                document.getElementById('adminLoginError').textContent = '密码错误';
                 document.getElementById('adminLoginError').style.display = 'block';
             }
-
-            btn.disabled = false;
         }
 
         function closeAdminPanel() {
             document.getElementById('adminPanel').style.display = 'none';
-            adminToken = null;
-            adminTimestamp = null;
+            adminLoggedIn = false;
         }
 
         function switchAdminTab(tab) {
@@ -1514,84 +1484,59 @@
             else loadAdminMessages();
         }
 
-        async function loadAdminLogs(page) {
-            page = page || 1;
-            document.getElementById('adminLogsLoading').style.display = 'block';
-            const result = await apiCall('admin', {
-                method: 'POST',
-                body: { action: 'list_logs', token: adminToken, timestamp: adminTimestamp, page: page, limit: 50 }
+        function loadAdminLogs() {
+            const tbody = document.getElementById('adminLogsBody');
+            tbody.innerHTML = '';
+            const visits = storageGet(STORAGE_KEY_VISITS).reverse();
+            visits.forEach(function (log) {
+                const timeStr = new Date(log.time).toLocaleString('zh-CN');
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100';
+                tr.innerHTML =
+                    '<td class="py-2 px-3 text-gray-600">' + timeStr + '</td>' +
+                    '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(log.nickname) + '</td>' +
+                    '<td class="py-2 px-3 text-gray-500 text-xs">本地</td>' +
+                    '<td class="py-2 px-3 text-gray-400 text-xs">--</td>';
+                tbody.appendChild(tr);
             });
-
-            if (result.success) {
-                const tbody = document.getElementById('adminLogsBody');
-                tbody.innerHTML = '';
-                result.logs.forEach(function (log) {
-                    const timeStr = new Date(log.createdAt).toLocaleString('zh-CN');
-                    const uaShort = (log.userAgent || '').substring(0, 60);
-                    const tr = document.createElement('tr');
-                    tr.className = 'border-b border-gray-100';
-                    tr.innerHTML =
-                        '<td class="py-2 px-3 text-gray-600">' + timeStr + '</td>' +
-                        '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(log.nickname) + '</td>' +
-                        '<td class="py-2 px-3 text-gray-500 text-xs">' + escapeHtml(log.ip) + '</td>' +
-                        '<td class="py-2 px-3 text-gray-400 text-xs">' + escapeHtml(uaShort) + '</td>';
-                    tbody.appendChild(tr);
-                });
-            }
-            document.getElementById('adminLogsLoading').style.display = 'none';
         }
 
-        async function loadAdminMessages(page) {
-            page = page || 1;
-            const result = await apiCall('admin', {
-                method: 'POST',
-                body: { action: 'list_messages', token: adminToken, timestamp: adminTimestamp, page: page, limit: 50 }
+        function loadAdminMessages() {
+            const tbody = document.getElementById('adminMessagesBody');
+            tbody.innerHTML = '';
+            const msgs = storageGet(STORAGE_KEY_MSGS).sort((a, b) => b.createdAt - a.createdAt);
+            msgs.forEach(function (msg) {
+                const timeStr = new Date(msg.createdAt).toLocaleString('zh-CN');
+                const contentShort = msg.content.length > 30 ? msg.content.substring(0, 30) + '...' : msg.content;
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100';
+                tr.innerHTML =
+                    '<td class="py-2 px-3 text-gray-600 text-xs">' + timeStr + '</td>' +
+                    '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(msg.nickname) + '</td>' +
+                    '<td class="py-2 px-3 text-gray-500 text-sm">' + escapeHtml(contentShort) + '</td>' +
+                    '<td class="py-2 px-3 text-gray-400 text-xs">本地</td>' +
+                    '<td class="py-2 px-3"><button onclick="deleteMessage(\'' + msg.id + '\')" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-xs hover:bg-red-200 transition">删除</button></td>';
+                tbody.appendChild(tr);
             });
-
-            if (result.success) {
-                const tbody = document.getElementById('adminMessagesBody');
-                tbody.innerHTML = '';
-                result.messages.forEach(function (msg) {
-                    const timeStr = new Date(msg.createdAt).toLocaleString('zh-CN');
-                    const contentShort = msg.content.length > 30 ? msg.content.substring(0, 30) + '...' : msg.content;
-                    const tr = document.createElement('tr');
-                    tr.className = 'border-b border-gray-100';
-                    tr.innerHTML =
-                        '<td class="py-2 px-3 text-gray-600 text-xs">' + timeStr + '</td>' +
-                        '<td class="py-2 px-3 font-medium text-gray-700">' + escapeHtml(msg.nickname) + '</td>' +
-                        '<td class="py-2 px-3 text-gray-500 text-sm">' + escapeHtml(contentShort) + '</td>' +
-                        '<td class="py-2 px-3 text-gray-400 text-xs">' + escapeHtml(msg.ip || '') + '</td>' +
-                        '<td class="py-2 px-3"><button onclick="deleteMessage(\'' + msg.objectId + '\')" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-xs hover:bg-red-200 transition">删除</button></td>';
-                    tbody.appendChild(tr);
-                });
-            }
         }
 
-        async function deleteMessage(messageId) {
+        function deleteMessage(messageId) {
             if (!confirm('确定删除这条留言吗？')) return;
-            const result = await apiCall('admin', {
-                method: 'POST',
-                body: { action: 'delete_message', token: adminToken, timestamp: adminTimestamp, messageId: messageId }
-            });
-            if (result.success) {
-                loadAdminMessages();
-                loadMessages(1);
-            }
+            const msgs = storageGet(STORAGE_KEY_MSGS).filter(function (m) { return m.id !== messageId; });
+            storageSet(STORAGE_KEY_MSGS, msgs);
+            loadAdminMessages();
+            loadMessages(1);
         }
 
-        async function exportLogsCSV() {
-            // 尽可能多地获取记录
-            const result = await apiCall('admin', {
-                method: 'POST',
-                body: { action: 'list_logs', token: adminToken, timestamp: adminTimestamp, page: 1, limit: 100 }
-            });
-            if (!result.success || !result.logs.length) {
+        function exportLogsCSV() {
+            const visits = storageGet(STORAGE_KEY_VISITS);
+            if (!visits.length) {
                 alert('没有数据可导出');
                 return;
             }
-            var csv = '﻿时间,昵称,IP\n';
-            result.logs.forEach(function (log) {
-                csv += new Date(log.createdAt).toLocaleString('zh-CN') + ',' + log.nickname + ',' + log.ip + '\n';
+            var csv = '﻿时间,昵称\n';
+            visits.forEach(function (log) {
+                csv += new Date(log.time).toLocaleString('zh-CN') + ',' + log.nickname + '\n';
             });
             var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
             var url = URL.createObjectURL(blob);
