@@ -1,30 +1,30 @@
 {
-  "update_time": "2026-07-15 09:17:41",
+  "update_time": "2026-07-16 05:47:23",
   "indices": {
     "sh000001": {
       "name": "上证指数",
-      "price": 3955.58,
-      "change": -0.29
+      "price": 3902.04,
+      "change": -1.35
     },
     "sz399001": {
       "name": "深证成指",
-      "price": 14779.4,
-      "change": -0.97
+      "price": 14546.36,
+      "change": -1.58
     },
     "sz399006": {
       "name": "创业板指",
-      "price": 3804.7,
-      "change": -1.21
+      "price": 3707.37,
+      "change": -2.56
     },
     "sh000300": {
       "name": "沪深300",
-      "price": 4786.78,
-      "change": -0.2
+      "price": 4717.81,
+      "change": -1.44
     },
     "sh000852": {
       "name": "中证1000",
-      "price": 7817.83,
-      "change": -1.35
+      "price": 7687.35,
+      "change": -1.67
     }
   },
   "sectors": {
@@ -32,7 +32,7 @@
     "turnover_top": []
   },
   "market": {
-    "limit_up_count": 5875,
+    "limit_up_count": 5877,
     "rising_count": 0,
     "falling_count": 0
   }
