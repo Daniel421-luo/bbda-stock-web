@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-09-16 08:29:54",
+  "update_time": "2026-09-16 12:33:19",
   "indices": {
     "sh000001": {
       "name": "上证指数",
@@ -32,7 +32,7 @@
     "turnover_top": []
   },
   "market": {
-    "limit_up_count": 0,
+    "limit_up_count": 5915,
     "rising_count": 0,
     "falling_count": 0
   }
